@@ -1,0 +1,5 @@
+# Speaker labels. Install with INSTALL_EXTRAS="diarization" and set ENABLE_DIARIZATION=true.
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.5.1
+torchaudio==2.5.1
+pyannote.audio==3.3.2

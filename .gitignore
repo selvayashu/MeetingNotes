@@ -1,0 +1,16 @@
+node_modules/
+dist/
+dev-dist/
+.env
+*.local
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.DS_Store
+Thumbs.db
+tests/samples/*
+!tests/samples/README.md
+!tests/samples/manifest.example.csv
+test-results/

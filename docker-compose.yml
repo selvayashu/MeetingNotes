@@ -1,0 +1,51 @@
+# MeetNotes backend: FastAPI + faster-whisper (in the "api" container) and Ollama.
+#   docker compose up -d --build                 # local / LAN
+#   docker compose --profile https up -d --build # production with automatic HTTPS (set DOMAIN in .env)
+services:
+  ollama:
+    image: ${OLLAMA_IMAGE:-ollama/ollama:0.5.7}
+    restart: unless-stopped
+    environment:
+      - OLLAMA_KEEP_ALIVE=${OLLAMA_KEEP_ALIVE:-30m}
+    volumes:
+      - ollama:/root/.ollama
+
+  api:
+    build:
+      context: ./backend
+      args:
+        INSTALL_EXTRAS: ${INSTALL_EXTRAS:-}
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - OLLAMA_URL=http://ollama:11434
+      - MODEL_CACHE_DIR=/models
+    ports:
+      # 127.0.0.1 keeps the API private to this machine; set API_BIND=0.0.0.0 to reach it from your LAN.
+      - "${API_BIND:-127.0.0.1}:${API_PORT:-8000}:8000"
+    volumes:
+      - models:/models
+    depends_on:
+      - ollama
+
+  caddy:
+    image: caddy:2.8.4
+    profiles: ["https"]
+    restart: unless-stopped
+    environment:
+      - DOMAIN=${DOMAIN:-}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+
+volumes:
+  ollama:
+  models:
+  caddy_data:
+  caddy_config:
