@@ -1,5 +1,10 @@
+import { parseWavHeader, sliceWav } from './wav'
+
 export const MAX_RECORDING_SECONDS =
   (Number(import.meta.env.VITE_MAX_RECORDING_MINUTES) || 90) * 60
+
+/** In-browser recordings are cut into segments of this length (see useRecorder). */
+export const SEGMENT_SECONDS = 300
 
 export const ACCEPTED_AUDIO = '.mp3,.m4a,.wav,.webm,.mp4,.ogg,audio/*'
 
@@ -36,6 +41,30 @@ export function readDuration(blob: Blob): Promise<number | null> {
     el.onerror = () => done(null)
     el.src = url
   })
+}
+
+/** Max audio per stored part (keeps one Whisper call small enough for a Worker's memory). */
+const PART_MAX_BYTES = 12 * 1024 * 1024
+
+export interface UploadPart {
+  blob: Blob
+  durationSeconds: number | null
+  fileName?: string
+}
+
+/** WAV files are cut into Whisper-sized parts; other formats go up as a single part. */
+export async function partsFromFile(file: File): Promise<UploadPart[]> {
+  if (/\.wav$/i.test(file.name) || file.type.includes('wav')) {
+    const info = parseWavHeader(await file.slice(0, 65536).arrayBuffer(), file.size)
+    if (info) {
+      return sliceWav(file, info, SEGMENT_SECONDS, PART_MAX_BYTES).map((s) => ({
+        blob: s.blob,
+        durationSeconds: Math.round(s.durationSeconds),
+        fileName: 'part.wav',
+      }))
+    }
+  }
+  return [{ blob: file, durationSeconds: await readDuration(file), fileName: file.name }]
 }
 
 export function formatClock(totalSeconds: number): string {

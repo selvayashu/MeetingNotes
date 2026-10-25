@@ -2,7 +2,13 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useRecorder } from '../hooks/useRecorder'
-import { ACCEPTED_AUDIO, MAX_RECORDING_SECONDS, formatClock, readDuration } from '../lib/audio'
+import {
+  ACCEPTED_AUDIO,
+  MAX_RECORDING_SECONDS,
+  formatClock,
+  partsFromFile,
+  type UploadPart,
+} from '../lib/audio'
 import { submitRecording } from '../lib/upload'
 
 type Lang = 'en' | 'hi' | 'ta' | 'auto'
@@ -24,7 +30,11 @@ export default function Record() {
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
 
-  const previewUrl = useMemo(() => (rec.result ? URL.createObjectURL(rec.result.blob) : null), [rec.result])
+  // Multi-segment recordings can't be previewed as one file, so only preview a single segment.
+  const previewUrl = useMemo(
+    () => (rec.result?.parts.length === 1 ? URL.createObjectURL(rec.result.parts[0].blob) : null),
+    [rec.result],
+  )
   useEffect(() => () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl)
   }, [previewUrl])
@@ -34,30 +44,30 @@ export default function Record() {
 
   async function save() {
     if (!user) return
-    const blob = rec.result?.blob ?? file
-    if (!blob) return
+    if (!rec.result && !file) return
     setBusy(true)
     setError(null)
     try {
-      const duration = rec.result ? rec.result.durationSeconds : await readDuration(blob)
+      const parts: UploadPart[] = rec.result ? rec.result.parts : await partsFromFile(file!)
+      const duration = parts.every((p) => p.durationSeconds != null)
+        ? parts.reduce((s, p) => s + (p.durationSeconds ?? 0), 0)
+        : null
       if (duration && duration > MAX_RECORDING_SECONDS) {
         throw new Error(`Recording is longer than the ${MAX_RECORDING_SECONDS / 60}-minute limit.`)
       }
       const res = await submitRecording({
         userId: user.id,
-        blob,
-        fileName: file?.name,
+        parts,
         title: title.trim() || file?.name.replace(/\.[^.]+$/, '') || 'Untitled meeting',
         language,
         notesLanguage,
-        durationSeconds: duration,
       })
       if (res.queued) {
         setNotice("You're offline. The recording is saved on this device and will upload automatically.")
         rec.reset()
         setFile(null)
       } else {
-        navigate('/')
+        navigate(`/?process=${res.id}`)
       }
     } catch (e) {
       setError((e as Error).message ?? 'Upload failed.')

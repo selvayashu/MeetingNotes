@@ -4,27 +4,38 @@ import { enqueue, listPending, removePending, type PendingRecording } from './qu
 
 export type NewRecording = Omit<PendingRecording, 'id' | 'createdAt' | 'meetingDate'>
 
-/** Upload audio, then create the meeting row. Safe to retry: same id, upsert semantics. */
+/** Upload every part, then create the meeting row. Safe to retry: same id, upsert uploads. */
 export async function uploadRecording(item: PendingRecording): Promise<void> {
-  const ext = extensionFor(item.blob.type, item.fileName)
-  const path = `${item.userId}/${item.id}.${ext}`
+  const audioParts = []
+  for (const [i, part] of item.parts.entries()) {
+    const ext = extensionFor(part.blob.type, part.fileName)
+    const path = `${item.userId}/${item.id}/${String(i).padStart(3, '0')}.${ext}`
+    const { error } = await supabase.storage
+      .from('recordings')
+      .upload(path, part.blob, { contentType: part.blob.type || undefined, upsert: true })
+    if (error) throw error
+    audioParts.push({ path, duration_seconds: part.durationSeconds, mime: part.blob.type })
+  }
 
-  const { error: upErr } = await supabase.storage
-    .from('recordings')
-    .upload(path, item.blob, { contentType: item.blob.type || undefined, upsert: true })
-  if (upErr) throw upErr
+  const total = item.parts.every((p) => p.durationSeconds != null)
+    ? item.parts.reduce((s, p) => s + (p.durationSeconds ?? 0), 0)
+    : null
 
-  const { error } = await supabase.from('meetings').upsert({
-    id: item.id,
-    user_id: item.userId,
-    title: item.title,
-    meeting_date: item.meetingDate,
-    language: item.language,
-    notes_language: item.notesLanguage,
-    duration_seconds: item.durationSeconds,
-    audio_path: path,
-    status: 'uploaded',
-  })
+  // Users can't UPDATE processing columns (see migration 4), so a retry must be insert-or-ignore.
+  const { error } = await supabase.from('meetings').upsert(
+    {
+      id: item.id,
+      user_id: item.userId,
+      title: item.title,
+      meeting_date: item.meetingDate,
+      language: item.language,
+      notes_language: item.notesLanguage,
+      duration_seconds: total,
+      audio_path: audioParts[0]?.path ?? null,
+      audio_parts: audioParts,
+    },
+    { onConflict: 'id', ignoreDuplicates: true },
+  )
   if (error) throw error
 }
 

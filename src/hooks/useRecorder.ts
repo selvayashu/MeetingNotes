@@ -1,13 +1,23 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { MAX_RECORDING_SECONDS, pickRecorderMime } from '../lib/audio'
+import { MAX_RECORDING_SECONDS, SEGMENT_SECONDS, pickRecorderMime } from '../lib/audio'
 
 export type RecorderState = 'idle' | 'recording' | 'paused' | 'stopped'
 
-export interface RecordedAudio {
+export interface AudioPart {
   blob: Blob
   durationSeconds: number
 }
 
+export interface RecordedAudio {
+  parts: AudioPart[]
+  durationSeconds: number
+}
+
+/**
+ * Records from the mic as a series of self-contained segments (~SEGMENT_SECONDS each).
+ * The server can't cut webm/mp4 without ffmpeg, so each segment is its own valid file
+ * that Whisper can transcribe independently.
+ */
 export function useRecorder() {
   const [state, setState] = useState<RecorderState>('idle')
   const [elapsed, setElapsed] = useState(0)
@@ -17,7 +27,11 @@ export function useRecorder() {
 
   const recorder = useRef<MediaRecorder | null>(null)
   const stream = useRef<MediaStream | null>(null)
-  const chunks = useRef<Blob[]>([])
+  const mime = useRef<string | undefined>(undefined)
+  const parts = useRef<AudioPart[]>([])
+  const finishing = useRef(false)
+  const segmentStart = useRef(0) // recording-seconds at which the current segment began
+  const stopSegment = useRef<((at: number) => void) | null>(null)
   const audioCtx = useRef<AudioContext | null>(null)
   const raf = useRef(0)
   const wakeLock = useRef<WakeLockSentinel | null>(null)
@@ -43,12 +57,47 @@ export function useRecorder() {
   const currentElapsed = () =>
     accumulated.current + (resumedAt.current ? (performance.now() - resumedAt.current) / 1000 : 0)
 
+  const startSegment = useCallback(() => {
+    const s = stream.current
+    if (!s) return
+    const chunks: Blob[] = []
+    const seg = { begin: currentElapsed(), end: 0 }
+    const rec = new MediaRecorder(s, mime.current ? { mimeType: mime.current, audioBitsPerSecond: 32000 } : undefined)
+    rec.ondataavailable = (e) => e.data.size > 0 && chunks.push(e.data)
+    rec.onstop = () => {
+      parts.current.push({
+        blob: new Blob(chunks, { type: rec.mimeType || mime.current || 'audio/webm' }),
+        durationSeconds: Math.round(seg.end - seg.begin),
+      })
+      if (finishing.current) {
+        const total = Math.round(seg.end)
+        setElapsed(total)
+        setResult({ parts: parts.current, durationSeconds: total })
+        setState('stopped')
+        cleanup()
+      }
+    }
+    rec.onerror = () => {
+      setError('Recording failed.')
+      cleanup()
+      setState('idle')
+    }
+    segmentStart.current = seg.begin
+    recorder.current = rec
+    stopSegment.current = (at: number) => {
+      seg.end = at
+      rec.stop()
+    }
+    rec.start(1000) // 1s timeslices keep memory use flat
+  }, [cleanup])
+
   const stop = useCallback(() => {
     const rec = recorder.current
     if (!rec || rec.state === 'inactive') return
     accumulated.current = currentElapsed()
     resumedAt.current = 0
-    rec.stop() // onstop assembles the blob
+    finishing.current = true
+    stopSegment.current?.(accumulated.current) // onstop assembles the final part
   }, [])
 
   const start = useCallback(async () => {
@@ -63,24 +112,9 @@ export function useRecorder() {
         audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 },
       })
       stream.current = s
-
-      const mime = pickRecorderMime()
-      const rec = new MediaRecorder(s, mime ? { mimeType: mime, audioBitsPerSecond: 32000 } : undefined)
-      chunks.current = []
-      rec.ondataavailable = (e) => e.data.size > 0 && chunks.current.push(e.data)
-      rec.onstop = () => {
-        const blob = new Blob(chunks.current, { type: rec.mimeType || mime || 'audio/webm' })
-        setElapsed(Math.floor(accumulated.current))
-        setResult({ blob, durationSeconds: Math.round(accumulated.current) })
-        setState('stopped')
-        cleanup()
-      }
-      rec.onerror = () => {
-        setError('Recording failed.')
-        cleanup()
-        setState('idle')
-      }
-      recorder.current = rec
+      mime.current = pickRecorderMime()
+      parts.current = []
+      finishing.current = false
 
       // Mic level meter
       const ctx = new AudioContext()
@@ -107,13 +141,25 @@ export function useRecorder() {
 
       accumulated.current = 0
       resumedAt.current = performance.now()
-      rec.start(1000) // 1s timeslices keep memory use flat for long meetings
+      startSegment()
       setElapsed(0)
       setState('recording')
       tick.current = window.setInterval(() => {
         const e = currentElapsed()
         setElapsed(Math.floor(e))
-        if (e >= MAX_RECORDING_SECONDS) stop()
+        if (e >= MAX_RECORDING_SECONDS) {
+          stop()
+        } else if (
+          recorder.current?.state === 'recording' &&
+          e - segmentStart.current >= SEGMENT_SECONDS
+        ) {
+          // Rotate: close this segment and open the next on the same mic stream.
+          // The segment boundary may cut a word; the gap is a few milliseconds.
+          accumulated.current = e
+          resumedAt.current = performance.now()
+          stopSegment.current?.(e)
+          startSegment()
+        }
       }, 250)
     } catch (err) {
       cleanup()
@@ -125,7 +171,7 @@ export function useRecorder() {
             : 'Could not start recording.',
       )
     }
-  }, [cleanup, stop])
+  }, [cleanup, startSegment, stop])
 
   const pause = useCallback(() => {
     if (recorder.current?.state !== 'recording') return

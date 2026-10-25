@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc -p functions/tsconfig.json"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
@@ -29,6 +31,7 @@
     "typescript": "~6.0.3",
     "vite": "^8.3.4",
     "vite-plugin-pwa": "^2.0.0",
+    "vitest": "^5.0.5",
     "wrangler": "^4.152.0"
   }
 }

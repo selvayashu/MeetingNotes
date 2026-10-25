@@ -1,0 +1,3 @@
+# Copy to .dev.vars (gitignored). Used by `wrangler pages dev`.
+SUPABASE_URL=https://YOUR-PROJECT.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key

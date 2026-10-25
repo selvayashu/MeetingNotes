@@ -4,12 +4,11 @@ export interface PendingRecording {
   /** Also used as the meetings.id, so retries are idempotent. */
   id: string
   userId: string
-  blob: Blob
-  fileName?: string
+  /** One entry per self-contained audio segment, in order. */
+  parts: { blob: Blob; durationSeconds: number | null; fileName?: string }[]
   title: string
   language: 'en' | 'hi' | 'ta' | 'auto'
   notesLanguage: 'en' | 'hi' | 'ta' | 'auto'
-  durationSeconds: number | null
   meetingDate: string
   createdAt: number
 }
