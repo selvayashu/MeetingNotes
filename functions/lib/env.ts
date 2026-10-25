@@ -6,6 +6,8 @@ export interface Env {
   MAX_MEETINGS_PER_DAY?: string
   /** Max recording length in minutes. */
   MAX_RECORDING_MINUTES?: string
+  /** Override the notes LLM (default: Llama 3.3 70B fp8-fast). */
+  LLM_MODEL?: string
 }
 
 export interface AudioPart {
@@ -20,6 +22,8 @@ export interface MeetingRow {
   id: string
   user_id: string
   language: 'en' | 'hi' | 'ta' | 'auto'
+  notes_language: 'en' | 'hi' | 'ta' | 'auto'
+  meeting_date: string
   status: 'uploaded' | 'transcribing' | 'summarising' | 'done' | 'failed'
   audio_parts: AudioPart[]
   processed_parts: number

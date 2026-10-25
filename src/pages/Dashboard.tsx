@@ -23,7 +23,9 @@ export default function Dashboard() {
   const [params, setParams] = useSearchParams()
   const [meetings, setMeetings] = useState<MeetingRow[] | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [running, setRunning] = useState<Record<string, { processed: number; total: number }>>({})
+  const [running, setRunning] = useState<
+    Record<string, { processed: number; total: number; stage?: string }>
+  >({})
   const inFlight = useRef(new Set<string>())
 
   const load = useCallback(async () => {
@@ -88,7 +90,12 @@ export default function Dashboard() {
           const prog = running[m.id]
           const total = prog?.total || m.audio_parts.length
           const processed = prog?.processed ?? m.processed_parts
-          const canStart = !prog && (m.status === 'uploaded' || m.status === 'failed' || m.status === 'transcribing')
+          const canStart =
+            !prog &&
+            (m.status === 'uploaded' ||
+              m.status === 'failed' ||
+              m.status === 'transcribing' ||
+              m.status === 'summarising')
           return (
             <li key={m.id} className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
               <div className="font-medium">{m.title}</div>
@@ -96,7 +103,7 @@ export default function Dashboard() {
                 <span>{new Date(m.meeting_date).toLocaleDateString()}</span>
                 <span>{m.language}</span>
                 {m.duration_seconds != null && <span>{formatClock(m.duration_seconds)}</span>}
-                <span className="ml-auto rounded bg-slate-100 px-2 dark:bg-slate-800">{prog ? 'transcribing' : m.status}</span>
+                <span className="ml-auto rounded bg-slate-100 px-2 dark:bg-slate-800">{prog ? (prog.stage ?? 'transcribing') : m.status}</span>
               </div>
               {prog && total > 0 && (
                 <div className="mt-2 h-1.5 overflow-hidden rounded bg-slate-200 dark:bg-slate-800">
@@ -108,7 +115,7 @@ export default function Dashboard() {
               )}
               {canStart && (
                 <button onClick={() => run(m.id)} className="mt-2 rounded bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white">
-                  {m.status === 'failed' ? 'Retry' : m.status === 'transcribing' ? 'Resume' : 'Transcribe'}
+                  {m.status === 'failed' ? 'Retry' : m.status === 'uploaded' ? 'Generate notes' : 'Resume'}
                 </button>
               )}
             </li>

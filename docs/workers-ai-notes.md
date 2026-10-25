@@ -37,3 +37,33 @@ Other uploaded formats go up as one part and must stay under 16 MB.
 (`meetings.processed_parts`) and returns. The client calls again until `done`. This avoids
 long-lived requests and `waitUntil` limits, and a retry resumes where it stopped. If the tab is
 closed, processing pauses until the meeting is reopened and "Resume" is pressed.
+
+# Notes LLM (measured 2026-10-25)
+
+Model: `@cf/meta/llama-3.3-70b-instruct-fp8-fast` (24k context, $0.293/M input, $2.253/M output).
+Override with the `LLM_MODEL` variable.
+
+## Why not GLM / Qwen3
+`@cf/zai-org/glm-4.7-flash` and `@cf/qwen/qwen3-30b-a3b-fp8` are *reasoning* models. In tests they
+sometimes spent the whole token budget "thinking" and returned `content: null`. GLM was also 4-5x
+slower (20 s vs 2-5 s). Llama 3.3 70B was correct on Hindi, Tamil and romanised Hinglish
+transcripts, in both English and same-language output.
+
+## Behaviours to know
+- `response_format: json_schema` works; the parsed object arrives in `response` (plain mode: a string in `choices[0].message.content`). `notes.ts` accepts both.
+- The model **ignores the output language** if the prompt is not emphatic. `generateNotes` therefore checks the script
+  (Devanagari/Tamil share of letters) and retries once with a correction.
+- Asking for "3-6 sentences" made it pad with filler, and on the merge call it ran away to the token cap (55 s, `finish_reason: length`).
+  The prompt now caps summaries by sentence/word count, forbids filler, and `max_tokens` is 1200.
+- Cost: about 30 neurons per chunk call. Workers AI's free allowance is 10,000 neurons/day.
+
+## Map-reduce
+Transcript text is cut into <= 8000-character chunks on segment boundaries. Each chunk becomes partial notes
+(3 in parallel); partials are saved to `meeting_notes.raw_llm_output` after each batch so a later request resumes.
+Partials are then merged (grouped if large). If the merge fails twice, a plain join/dedupe is used.
+6 chunks + merge = 14.6 s.
+
+## Due dates
+`action_items.due_date` is a SQL `date`. The model returns an ISO date, `today`, `tomorrow` or a weekday name;
+`resolveDueDate` turns that into a date relative to the meeting day (a weekday equal to the meeting's own
+weekday means next week). Anything else becomes null.

@@ -2,6 +2,7 @@ import { supabase } from './supabase'
 
 export interface ProcessProgress {
   done: boolean
+  stage: 'transcribing' | 'summarising' | 'done'
   status: string
   processed: number
   total: number

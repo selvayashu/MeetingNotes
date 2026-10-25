@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { Env, MeetingRow } from '../lib/env'
 import { partOffsetMs, toSegmentRows } from '../lib/segments'
+import { runSummaryStage } from '../lib/summaryStage'
 import { transcribe } from '../lib/whisper'
 
 /**
@@ -76,8 +77,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     if (!m || m.user_id !== userId) throw new HttpError(404, 'Meeting not found')
     const meeting = m as MeetingRow
 
-    if (meeting.status === 'summarising' || meeting.status === 'done') {
-      return json({ done: true, status: meeting.status, processed: meeting.audio_parts.length, total: meeting.audio_parts.length })
+    if (meeting.status === 'done') {
+      return json({ done: true, stage: 'done', status: 'done', processed: 1, total: 1 })
     }
 
     const parts = meeting.audio_parts
@@ -97,10 +98,12 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
     // Atomic claim: only one worker per meeting at a time.
     const now = new Date()
+    // Resume at the right stage (a retry after a summarising failure skips transcription).
+    const transcribed = meeting.processed_parts >= parts.length
     const { data: claimed } = await db
       .from('meetings')
       .update({
-        status: 'transcribing',
+        status: transcribed ? 'summarising' : 'transcribing',
         error_message: null,
         processing_started_at: meeting.processing_started_at ?? now.toISOString(),
         lock_until: new Date(now.getTime() + LOCK_SECONDS * 1000).toISOString(),
@@ -109,7 +112,10 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       .or(`lock_until.is.null,lock_until.lt.${now.toISOString()}`)
       .select('id')
     if (!claimed?.length) {
-      return json({ done: false, busy: true, processed: meeting.processed_parts, total: parts.length }, 202)
+      return json(
+        { done: false, busy: true, stage: meeting.status, status: meeting.status, processed: meeting.processed_parts, total: parts.length },
+        202,
+      )
     }
     locked = true
 
@@ -147,18 +153,38 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
         .eq('id', meetingId)
     }
 
-    const done = processed >= parts.length
-    await db
-      .from('meetings')
-      .update({
-        // Summarisation (next step) takes over from here.
-        status: done ? 'summarising' : 'transcribing',
-        lock_until: null,
-      })
-      .eq('id', meetingId)
-    locked = false
+    if (processed < parts.length) {
+      await db.from('meetings').update({ status: 'transcribing', lock_until: null }).eq('id', meetingId)
+      locked = false
+      return json({ done: false, stage: 'transcribing', status: 'transcribing', processed, total: parts.length })
+    }
 
-    return json({ done, status: done ? 'summarising' : 'transcribing', processed, total: parts.length })
+    // Transcription finished: move on to notes. Skip if too little budget is left for an LLM call;
+    // the client's next call picks it up.
+    await db.from('meetings').update({ status: 'summarising' }).eq('id', meetingId)
+    if (Date.now() - started > TIME_BUDGET_MS - 8_000) {
+      await db.from('meetings').update({ lock_until: null }).eq('id', meetingId)
+      locked = false
+      return json({ done: false, stage: 'summarising', status: 'summarising', processed: 0, total: 1 })
+    }
+
+    const summary = await runSummaryStage({
+      db,
+      env,
+      meeting: { ...meeting, audio_parts: workingParts },
+      deadline: started + TIME_BUDGET_MS,
+    })
+    if (!summary.done) {
+      await db.from('meetings').update({ lock_until: null }).eq('id', meetingId)
+    }
+    locked = false
+    return json({
+      done: summary.done,
+      stage: summary.done ? 'done' : 'summarising',
+      status: summary.done ? 'done' : 'summarising',
+      processed: summary.processed,
+      total: summary.total,
+    })
   } catch (err) {
     const status = err instanceof HttpError ? err.status : 500
     const message = err instanceof Error ? err.message : 'Processing failed'
