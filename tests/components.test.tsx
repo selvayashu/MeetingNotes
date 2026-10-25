@@ -50,6 +50,9 @@ const segments: Segment[] = [
   { id: '3', start_ms: 130_000, end_ms: 135_000, text: 'வெள்ளிக்கிழமை வெளியிடுவது என்று முடிவு' },
 ]
 
+// Each transcript line has a click-to-seek button (named by its timestamp) and, since editing, an edit button.
+const seekButtons = () => screen.getAllByRole('button', { name: /^\d\d:\d\d/ })
+
 describe('TranscriptTab', () => {
   const setup = (props: Partial<Parameters<typeof TranscriptTab>[0]> = {}) => {
     const onSeek = vi.fn()
@@ -70,7 +73,7 @@ describe('TranscriptTab', () => {
   it('filters by search and highlights the match, case-insensitively', async () => {
     const { user } = setup()
     await user.type(screen.getByLabelText('Search transcript'), 'FRIDAY')
-    expect(screen.getAllByRole('button')).toHaveLength(1)
+    expect(seekButtons()).toHaveLength(1)
     expect(screen.getByText('Friday', { selector: 'mark' })).toBeTruthy()
     expect(screen.getByText('1 match')).toBeTruthy()
   })
@@ -79,17 +82,17 @@ describe('TranscriptTab', () => {
     const { user } = setup()
     const box = screen.getByLabelText('Search transcript')
     await user.type(box, 'வெள்ளி')
-    expect(screen.getAllByRole('button')).toHaveLength(1)
+    expect(seekButtons()).toHaveLength(1)
     await user.clear(box)
     await user.type(box, '(.*')
-    expect(screen.queryAllByRole('button')).toHaveLength(0)
+    expect(screen.queryAllByRole('button', { name: /^\d\d:\d\d/ })).toHaveLength(0)
     expect(screen.getByText('0 matches')).toBeTruthy()
   })
 
   it('marks the segment being spoken and disables seeking without audio', () => {
     setup({ currentMs: 66_000 })
     const active = screen.getByText('Launch the website on Friday').closest('button')!
-    expect(active.className).toContain('bg-indigo-50')
+    expect(active.parentElement!.className).toContain('bg-indigo-50') // the highlight sits on the row wrapper
     cleanup()
     setup({ canSeek: false })
     expect((screen.getByText('Good morning everyone').closest('button') as HTMLButtonElement).disabled).toBe(true)

@@ -182,6 +182,22 @@ next visit to the Record page (or a hint on the dashboard) offers **Recover it**
 upload path. The safety copy is deleted once the recording is in the upload queue. At most about a second of audio is lost.
 This relies on the browser's storage (private/incognito windows may refuse it; the app then records without a safety copy).
 
+## Editing the transcript
+
+Speech recognition makes mistakes (especially in Tamil), so every transcript line can be corrected on the **Transcript** tab:
+
+- **Edit a line** with the ✎ button (Ctrl+Enter saves, Esc cancels). Edited lines are marked *edited*. **Restore original** brings back
+  exactly what Whisper wrote: the database keeps it in `transcript_segments.original_text`.
+- **Replace all:** search for a word, type the replacement, press *Replace all (n)*. Matching is case-insensitive and literal.
+- **Update notes from transcript:** the summary, decisions and action items were written from the *original* transcript. When a line has
+  been edited after the notes were written, a banner offers to rewrite them from the corrected transcript. This **replaces** the
+  summary, decisions and action items (including ticked items and your edits to them), so it asks first. It needs no audio, so it also
+  works after "delete audio after notes", has a 30-second cooldown, and can continue in the background like any processing.
+- Exports use the edited text. Line timings cannot be changed.
+
+The rules are enforced in the database (a trigger): only the words of a line can change, the original is captured on the first edit and
+cannot be forged, lines can't be empty or over 4000 characters, and only the meeting's owner (while approved) can edit.
+
 ## Speech-to-text accuracy
 
 Measured on real speech (Google FLEURS): English about 5% word errors; Hindi about 30% word / 10-15% character errors with the
@@ -283,6 +299,14 @@ Automated: `npm test` and `npm run typecheck` must pass. Manual (needs a live Su
       the tab) and gets the app. Revoke them: their next request returns no data and processing is refused with 403.
 - [ ] A pending user calling `/api/process-meeting` with their own token gets 403; PATCHing their own `profiles.status`
       is rejected.
+
+**Transcript editing**
+- [ ] Edit a line (✎): it shows *edited*; reload the page and the edit is still there. Reopen the editor: *Original: …* shows Whisper's text.
+- [ ] *Restore original* removes the marker. An empty line is refused. Ctrl+Enter saves, Esc cancels.
+- [ ] Search for a misspelled name, type the correct one, *Replace all*: the count in the button matches the lines changed.
+- [ ] After editing, a banner says the notes are out of date. *Update notes from transcript* asks for confirmation, then the summary
+      and action items reflect your correction. Pressing it twice within 30 s is refused politely.
+- [ ] Works on a meeting whose audio was deleted. A second user cannot edit your lines (open the same URL).
 
 **Notes and sharing**
 - [ ] Edit the title, summary and action items (tick, edit, add, delete); reload and the changes persist.

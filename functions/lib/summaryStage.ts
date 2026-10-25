@@ -48,6 +48,7 @@ async function finish(db: SupabaseClient, env: Env, m: MeetingRow, notes: Notes,
       summary: notes.summary,
       decisions: notes.decisions,
       raw_llm_output: { ...(state ?? {}), final: notes },
+      generated_at: new Date().toISOString(), // lets the app tell when later transcript edits made the notes stale
     },
     { onConflict: 'meeting_id' },
   )
@@ -74,7 +75,7 @@ async function finish(db: SupabaseClient, env: Env, m: MeetingRow, notes: Notes,
     .eq('id', m.user_id)
     .maybeSingle()
   let audioPatch: Record<string, unknown> = {}
-  if (profile?.delete_audio_after_notes) {
+  if (profile?.delete_audio_after_notes && m.audio_parts.length > 0) {
     const paths = m.audio_parts.map((p) => p.path)
     const { error } = await db.storage.from('recordings').remove(paths)
     if (!error) audioPatch = { audio_path: null, audio_parts: [] }

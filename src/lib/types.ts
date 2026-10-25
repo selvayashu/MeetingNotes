@@ -26,6 +26,8 @@ export interface Meeting {
 export interface MeetingNotes {
   summary: string
   decisions: string[]
+  /** When these notes were written; edits to the transcript after this make them stale. */
+  generated_at: string | null
 }
 
 export interface ActionItem {
@@ -41,4 +43,7 @@ export interface Segment {
   start_ms: number
   end_ms: number
   text: string
+  /** Whisper's text, kept once a line has been edited (null = never edited). */
+  original_text: string | null
+  edited_at: string | null
 }

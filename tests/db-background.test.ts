@@ -1,36 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
-import { PGlite } from '@electric-sql/pglite'
-import fs from 'node:fs'
-import path from 'node:path'
+import { migratedDb } from './helpers/migratedDb'
 
 // Starting an in-process Postgres and applying every migration takes several seconds, longer on a busy machine.
 vi.setConfig({ testTimeout: 90_000 })
-
-// Applies the real migrations to an in-process Postgres (stand-ins for Supabase's auth/storage schemas).
-// The scheduler migration needs pg_cron/pg_net, which this engine lacks, so any file with "cron" in its name is skipped;
-// the logic under test (which meetings are picked) lives in the migration before it.
-async function migratedDb() {
-  const db = new PGlite()
-  await db.exec(`
-    create role anon nologin; create role authenticated nologin;
-    create schema auth; create schema storage;
-    create table auth.users (id uuid primary key, email text, raw_user_meta_data jsonb);
-    create function auth.uid() returns uuid language sql stable as
-      $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
-    create table storage.buckets (id text primary key, name text, public bool, file_size_limit bigint);
-    create table storage.objects (id uuid default gen_random_uuid(), bucket_id text, name text);
-    alter table storage.objects enable row level security;
-    create function storage.foldername(name text) returns text[] language sql as
-      $$ select string_to_array(name, '/') $$;
-    grant usage on schema auth, storage, public to authenticated, anon;
-  `)
-  const dir = path.join(process.cwd(), 'supabase', 'migrations')
-  for (const f of fs.readdirSync(dir).sort().filter((n) => !n.includes('cron'))) {
-    if (f.includes('000004')) await db.exec('grant select,insert,update,delete on all tables in schema public, storage to authenticated;')
-    await db.exec(fs.readFileSync(path.join(dir, f), 'utf8'))
-  }
-  return db
-}
 
 const U = (n: number) => `00000000-0000-0000-0000-0000000000${String(n).padStart(2, '0')}`
 const M = (n: number) => `10000000-0000-0000-0000-0000000000${String(n).padStart(2, '0')}`

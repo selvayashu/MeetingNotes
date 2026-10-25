@@ -15,7 +15,7 @@ async function loadSegments(meetingId: string): Promise<Segment[]> {
   for (let from = 0; ; from += 1000) {
     const { data, error } = await supabase
       .from('transcript_segments')
-      .select('id,start_ms,end_ms,text')
+      .select('id,start_ms,end_ms,text,original_text,edited_at')
       .eq('meeting_id', meetingId)
       .order('start_ms', { ascending: true })
       .range(from, from + 999)
@@ -36,7 +36,7 @@ export function useMeeting(id: string | undefined) {
     try {
       const [m, n, a, segments] = await Promise.all([
         supabase.from('meetings').select('*').eq('id', id).maybeSingle(),
-        supabase.from('meeting_notes').select('summary,decisions').eq('meeting_id', id).maybeSingle(),
+        supabase.from('meeting_notes').select('summary,decisions,generated_at').eq('meeting_id', id).maybeSingle(),
         supabase
           .from('action_items')
           .select('id,task,owner,due_date,is_done')
@@ -52,7 +52,9 @@ export function useMeeting(id: string | undefined) {
       if (a.error) throw a.error
       setData({
         meeting: m.data as Meeting,
-        notes: n.data ? { summary: n.data.summary, decisions: (n.data.decisions as string[]) ?? [] } : null,
+        notes: n.data
+          ? { summary: n.data.summary, decisions: (n.data.decisions as string[]) ?? [], generated_at: n.data.generated_at }
+          : null,
         items: a.data as ActionItem[],
         segments,
       })

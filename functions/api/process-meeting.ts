@@ -12,6 +12,9 @@ import { transcribe } from '../lib/whisper'
  * TIME_BUDGET_MS, saves progress, and returns { done, processed, total }. The client calls it
  * again until done. A retry after failure resumes from the first untranscribed part.
  *
+ * Body: { meetingId, regenerate?: true }. `regenerate` (users only) rewrites the notes of a finished meeting from its
+ * current, possibly edited, transcript. It needs no audio, so it also works after the audio was deleted.
+ *
  * Two kinds of caller:
  *  - the signed-in user's browser (Authorization: Bearer <Supabase JWT>), and
  *  - the Supabase scheduler (header x-cron-secret), which keeps unfinished meetings moving after the user has
@@ -23,6 +26,7 @@ const TIME_BUDGET_MS = 35_000
 const LOCK_SECONDS = 120
 const MAX_PART_BYTES = 16 * 1024 * 1024
 const MAX_PARTS = 200
+const REGENERATE_COOLDOWN_MS = 30_000
 
 const json = (body: unknown, status = 200) => Response.json(body, { status })
 
@@ -75,7 +79,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     cron = await isCronCaller(request.headers.get('x-cron-secret'), env.CRON_SECRET)
     if (request.headers.get('x-cron-secret') && !cron) throw new HttpError(401, 'Invalid credentials')
     if (!cron) userId = await authenticate(request, env)
-    const body = (await request.json().catch(() => null)) as { meetingId?: string } | null
+    const body = (await request.json().catch(() => null)) as { meetingId?: string; regenerate?: boolean } | null
     meetingId = body?.meetingId
     if (!meetingId || !/^[0-9a-f-]{36}$/i.test(meetingId)) throw new HttpError(400, 'meetingId required')
 
@@ -99,14 +103,25 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       await assertApproved(userId) // ...and only while the owner is still approved
     }
 
-    if (meeting.status === 'done') {
+    // Re-writing finished notes is an explicit request by the owner (never the scheduler), with a short cooldown.
+    const regenerate = body?.regenerate === true && !cron
+    if (meeting.status === 'done' && !regenerate) {
       return json({ done: true, stage: 'done', status: 'done', processed: 1, total: 1 })
+    }
+    if (regenerate) {
+      if (meeting.status !== 'done') throw new HttpError(409, 'The notes are still being prepared.')
+      const { data: last } = await db.from('meeting_notes').select('generated_at').eq('meeting_id', meetingId).maybeSingle()
+      if (last?.generated_at && Date.now() - Date.parse(last.generated_at) < REGENERATE_COOLDOWN_MS) {
+        throw new HttpError(429, 'Please wait a moment before updating the notes again.')
+      }
     }
 
     const parts = meeting.audio_parts
     const maxSeconds = (Number(env.MAX_RECORDING_MINUTES) || 90) * 60
     const knownTotal = parts.reduce((s, p) => s + (p.duration_seconds ?? 0), 0)
-    if (parts.length === 0) throw new HttpError(422, 'Meeting has no audio')
+    // Audio may legitimately be gone (deleted after the first notes); that is only a problem if nothing was transcribed.
+    const alreadyTranscribed = meeting.processed_parts > 0 && meeting.processed_parts >= parts.length
+    if (parts.length === 0 && !alreadyTranscribed) throw new HttpError(422, 'Meeting has no audio')
     if (parts.length > MAX_PARTS || knownTotal > maxSeconds + 60) {
       throw new HttpError(422, `Recording exceeds the ${maxSeconds / 60}-minute limit`)
     }
@@ -116,7 +131,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     }
 
     // Rate limit counts a meeting once, when processing first starts.
-    if (!meeting.processing_started_at) await checkRateLimit(db, userId, env)
+    if (!meeting.processing_started_at && !regenerate) await checkRateLimit(db, userId, env)
 
     // Atomic claim: only one worker per meeting at a time.
     const now = new Date()
@@ -140,6 +155,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       )
     }
     locked = true
+    // Start the notes over from the transcript as it is now (drop any half-finished earlier run).
+    if (regenerate) await db.from('meeting_notes').update({ raw_llm_output: null }).eq('meeting_id', meetingId)
 
     let processed = meeting.processed_parts
     const workingParts = parts.map((p) => ({ ...p }))

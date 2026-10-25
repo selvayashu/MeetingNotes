@@ -11,6 +11,7 @@ import type { TKey } from '../i18n/translate'
 import { processMeeting } from '../lib/api'
 import { buildMarkdown, buildPlainText, fileSlug, type ExportLabels } from '../lib/export'
 import { supabase } from '../lib/supabase'
+import { notesAreStale } from '../lib/transcriptEdit'
 
 type Tab = 'summary' | 'actions' | 'transcript'
 const TABS: { id: Tab; key: TKey }[] = [
@@ -162,6 +163,25 @@ export default function MeetingDetail() {
     }
   }
 
+  /** Rewrite the notes from the transcript as it is now. Replaces summary, decisions and action items. */
+  async function updateNotes() {
+    if (!data || !window.confirm(t('notesStale.confirm'))) return
+    setActionError(null)
+    setRunning(t('notesStale.updating'))
+    try {
+      await processMeeting(
+        data.meeting.id,
+        (p) => setRunning(t('notesStale.progress', { done: p.processed, total: p.total })),
+        { regenerate: true },
+      )
+    } catch (e) {
+      setActionError((e as Error).message)
+    } finally {
+      await reload()
+      setRunning(null)
+    }
+  }
+
   if (loading) return <p className="text-slate-500 dark:text-slate-400">{t('common.loading')}</p>
   if (error || !data) {
     return (
@@ -174,6 +194,7 @@ export default function MeetingDetail() {
 
   const { meeting, notes, items, segments } = data
   const done = meeting.status === 'done'
+  const staleNotes = done && notesAreStale(segments, notes?.generated_at)
   const menu: [string, () => void][] = [
     [t('detail.share'), share],
     [t('detail.copyMd'), copyMarkdown],
@@ -240,6 +261,20 @@ export default function MeetingDetail() {
       )}
       {actionError && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{actionError}</p>}
 
+      {done && running && (
+        <p role="status" className="rounded-lg bg-indigo-50 p-3 text-sm text-indigo-900 dark:bg-indigo-950 dark:text-indigo-100">
+          {running}
+        </p>
+      )}
+      {staleNotes && !running && (
+        <div role="status" className="flex flex-col gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-100">
+          <p>{t('notesStale.banner')}</p>
+          <button onClick={updateNotes} className="self-start rounded-lg bg-amber-600 px-3 py-2 font-semibold text-white">
+            {t('notesStale.update')}
+          </button>
+        </div>
+      )}
+
       {!done ? (
         <div className="flex flex-col items-start gap-2 rounded-lg border border-slate-200 p-4 dark:border-slate-800">
           <p>
@@ -305,6 +340,7 @@ export default function MeetingDetail() {
                 playing={player.playing}
                 canSeek={hasAudio && player.ready}
                 onSeek={(ms) => player.seekMs(ms, true)}
+                onChange={(next) => patch((d) => ({ ...d, segments: next }))}
               />
             )}
           </div>

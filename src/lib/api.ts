@@ -8,14 +8,14 @@ export interface ProcessProgress {
   total: number
 }
 
-async function callProcess(meetingId: string): Promise<ProcessProgress & { busy?: boolean }> {
+async function callProcess(meetingId: string, regenerate = false): Promise<ProcessProgress & { busy?: boolean }> {
   const { data } = await supabase.auth.getSession()
   const token = data.session?.access_token
   if (!token) throw new Error('Not signed in')
   const res = await fetch('/api/process-meeting', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ meetingId }),
+    body: JSON.stringify(regenerate ? { meetingId, regenerate: true } : { meetingId }),
   })
   const body = await res.json().catch(() => ({}))
   if (!res.ok && res.status !== 202) throw new Error(body.error ?? `Request failed (${res.status})`)
@@ -29,11 +29,14 @@ async function callProcess(meetingId: string): Promise<ProcessProgress & { busy?
 export async function processMeeting(
   meetingId: string,
   onProgress: (p: ProcessProgress) => void,
+  options: { regenerate?: boolean } = {},
 ): Promise<ProcessProgress> {
   let networkFailures = 0
+  let first = true // `regenerate` only on the first call; the rest simply continue the run it started
   for (;;) {
     try {
-      const p = await callProcess(meetingId)
+      const p = await callProcess(meetingId, first && options.regenerate === true)
+      first = false
       networkFailures = 0
       onProgress(p)
       if (p.done) return p
