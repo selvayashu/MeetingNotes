@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useI18n } from '../i18n/context'
 import { supabase } from '../lib/supabase'
 import type { ActionItem } from '../lib/types'
 
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function ActionItemsTab({ meetingId, items, onChange }: Props) {
+  const { t } = useI18n()
   const [error, setError] = useState<string | null>(null)
   const [newTask, setNewTask] = useState('')
 
@@ -51,7 +53,7 @@ export default function ActionItemsTab({ meetingId, items, onChange }: Props) {
 
   return (
     <div className="flex flex-col gap-3">
-      {items.length === 0 && <p className="text-slate-500">No action items.</p>}
+      {items.length === 0 && <p className="text-slate-500 dark:text-slate-400">{t('actions.none')}</p>}
       <ul className="flex flex-col gap-3">
         {items.map((i) => (
           <li key={i.id} className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
@@ -60,7 +62,7 @@ export default function ActionItemsTab({ meetingId, items, onChange }: Props) {
                 type="checkbox"
                 checked={i.is_done}
                 onChange={(e) => update(i.id, { is_done: e.target.checked })}
-                aria-label={`Mark done: ${i.task}`}
+                aria-label={t('actions.markDone', { task: i.task })}
                 className="mt-1.5 h-5 w-5 shrink-0"
               />
               <input
@@ -70,18 +72,18 @@ export default function ActionItemsTab({ meetingId, items, onChange }: Props) {
                   if (!v) e.target.value = i.task
                   else if (v !== i.task) void update(i.id, { task: v })
                 }}
-                aria-label="Task"
+                aria-label={t('actions.task')}
                 className={`min-w-0 flex-1 bg-transparent py-1 ${i.is_done ? 'text-slate-400 line-through' : ''}`}
               />
-              <button onClick={() => remove(i.id)} aria-label={`Delete: ${i.task}`} className="px-1 text-slate-400 hover:text-red-600">
+              <button onClick={() => remove(i.id)} aria-label={t('actions.delete', { task: i.task })} className="px-2 py-1 text-slate-400 hover:text-red-600">
                 ✕
               </button>
             </div>
             <div className="mt-2 flex flex-wrap gap-2 pl-8">
               <input
                 defaultValue={i.owner ?? ''}
-                placeholder="Owner"
-                aria-label="Owner"
+                placeholder={t('actions.owner')}
+                aria-label={t('actions.owner')}
                 onBlur={(e) => {
                   const v = e.target.value.trim() || null
                   if (v !== i.owner) void update(i.id, { owner: v })
@@ -91,7 +93,7 @@ export default function ActionItemsTab({ meetingId, items, onChange }: Props) {
               <input
                 type="date"
                 defaultValue={i.due_date ?? ''}
-                aria-label="Due date"
+                aria-label={t('actions.due')}
                 onChange={(e) => update(i.id, { due_date: e.target.value || null })}
                 className={small}
               />
@@ -110,15 +112,15 @@ export default function ActionItemsTab({ meetingId, items, onChange }: Props) {
         <input
           value={newTask}
           onChange={(e) => setNewTask(e.target.value)}
-          placeholder="Add an action item"
-          aria-label="New action item"
+          placeholder={t('actions.new')}
+          aria-label={t('actions.new')}
           className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900"
         />
         <button disabled={!newTask.trim()} className="rounded-lg bg-indigo-600 px-4 font-semibold text-white disabled:opacity-50">
-          Add
+          {t('common.add')}
         </button>
       </form>
-      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+      {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
     </div>
   )
 }

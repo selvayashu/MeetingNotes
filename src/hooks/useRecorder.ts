@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { MAX_RECORDING_SECONDS, SEGMENT_SECONDS, pickRecorderMime } from '../lib/audio'
 
+export type RecorderError = 'unsupported' | 'denied' | 'nomic' | 'start' | 'failed'
 export type RecorderState = 'idle' | 'recording' | 'paused' | 'stopped'
 
 export interface AudioPart {
@@ -22,7 +23,7 @@ export function useRecorder() {
   const [state, setState] = useState<RecorderState>('idle')
   const [elapsed, setElapsed] = useState(0)
   const [level, setLevel] = useState(0)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<RecorderError | null>(null)
   const [result, setResult] = useState<RecordedAudio | null>(null)
 
   const recorder = useRef<MediaRecorder | null>(null)
@@ -78,7 +79,7 @@ export function useRecorder() {
       }
     }
     rec.onerror = () => {
-      setError('Recording failed.')
+      setError('failed')
       cleanup()
       setState('idle')
     }
@@ -104,7 +105,7 @@ export function useRecorder() {
     setError(null)
     setResult(null)
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
-      setError('Recording is not supported in this browser. Try uploading a file instead.')
+      setError('unsupported')
       return
     }
     try {
@@ -165,10 +166,10 @@ export function useRecorder() {
       cleanup()
       setError(
         err instanceof DOMException && err.name === 'NotAllowedError'
-          ? 'Microphone permission was denied.'
+          ? 'denied'
           : err instanceof DOMException && err.name === 'NotFoundError'
-            ? 'No microphone found.'
-            : 'Could not start recording.',
+            ? 'nomic'
+            : 'start',
       )
     }
   }, [cleanup, startSegment, stop])

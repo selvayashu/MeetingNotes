@@ -10,7 +10,7 @@ import type { AudioPart } from '../lib/types'
 export function useAudioTimeline(parts: AudioPart[]) {
   const timeline = useMemo(() => buildTimeline(parts), [parts])
   const [urls, setUrls] = useState<string[] | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<'load' | 'play' | null>(null)
   const [currentMs, setCurrentMs] = useState(0)
   const [playing, setPlaying] = useState(false)
   const [rate, setRateState] = useState(1)
@@ -31,7 +31,7 @@ export function useAudioTimeline(parts: AudioPart[]) {
       .then(({ data, error }) => {
         if (cancelled) return
         if (error || !data || data.some((d) => !d.signedUrl)) {
-          setError('Could not load the audio.')
+          setError('load')
         } else {
           setUrls(data.map((d) => d.signedUrl as string))
         }
@@ -75,7 +75,7 @@ export function useAudioTimeline(parts: AudioPart[]) {
       if (index.current + 1 < urls.length) load(urls, index.current + 1, 0, true)
       else setPlaying(false)
     }
-    a.onerror = () => setError('Audio could not be played. Reload the page to refresh the link.')
+    a.onerror = () => setError('play')
 
     load(urls, 0, 0, false)
     return () => {

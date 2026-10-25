@@ -5,6 +5,8 @@ import { processMeeting } from '../lib/api'
 import { formatClock } from '../lib/audio'
 import { useAuth } from '../hooks/useAuth'
 import { useQueueSync } from '../hooks/useQueueSync'
+import { useI18n } from '../i18n/context'
+import type { TKey } from '../i18n/translate'
 
 interface MeetingRow {
   id: string
@@ -18,8 +20,20 @@ interface MeetingRow {
   audio_parts: unknown[]
 }
 
+const STATUS_STYLE: Record<string, string> = {
+  done: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200',
+  failed: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200',
+  uploaded: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200',
+  transcribing: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200',
+  summarising: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200',
+}
+
+const filterCls =
+  'rounded-lg border border-slate-300 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-900'
+
 export default function Dashboard() {
   const { user } = useAuth()
+  const { t, lang } = useI18n()
   const [params, setParams] = useSearchParams()
   const [meetings, setMeetings] = useState<MeetingRow[] | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -91,37 +105,38 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-xl font-semibold">Meetings</h2>
+      <h2 className="text-xl font-semibold">{t('dashboard.title')}</h2>
       {pending > 0 && (
-        <p className="rounded-lg bg-amber-100 p-3 text-sm text-amber-900">
-          {pending} recording{pending > 1 ? 's' : ''} waiting to upload.
+        <p className="rounded-lg bg-amber-100 p-3 text-sm text-amber-900 dark:bg-amber-900/40 dark:text-amber-100">
+          {t(pending > 1 ? 'dashboard.pendingMany' : 'dashboard.pendingOne', { n: pending })}
         </p>
       )}
-      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+      {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+
       <div className="flex flex-col gap-2">
         <input
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search meetings"
-          aria-label="Search meetings"
+          placeholder={t('dashboard.search')}
+          aria-label={t('dashboard.search')}
           className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900"
         />
         <div className="flex flex-wrap gap-2 text-sm">
           <select
             value={langFilter}
             onChange={(e) => setLangFilter(e.target.value)}
-            aria-label="Filter by language"
-            className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-900"
+            aria-label={t('dashboard.filterLanguage')}
+            className={filterCls}
           >
-            <option value="">All languages</option>
-            <option value="en">English</option>
-            <option value="hi">Hindi</option>
-            <option value="ta">Tamil</option>
-            <option value="auto">Auto-detect</option>
+            <option value="">{t('dashboard.allLanguages')}</option>
+            <option value="en">{t('lang.en')}</option>
+            <option value="hi">{t('lang.hi')}</option>
+            <option value="ta">{t('lang.ta')}</option>
+            <option value="auto">{t('lang.auto')}</option>
           </select>
-          <input type="date" value={from} max={to || undefined} onChange={(e) => setFrom(e.target.value)} aria-label="From date" className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-900" />
-          <input type="date" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} aria-label="To date" className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-900" />
+          <input type="date" value={from} max={to || undefined} onChange={(e) => setFrom(e.target.value)} aria-label={t('dashboard.fromDate')} className={filterCls} />
+          <input type="date" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} aria-label={t('dashboard.toDate')} className={filterCls} />
           {filtering && (
             <button
               onClick={() => {
@@ -130,22 +145,24 @@ export default function Dashboard() {
                 setFrom('')
                 setTo('')
               }}
-              className="text-indigo-600 underline"
+              className="text-indigo-600 underline dark:text-indigo-400"
             >
-              Clear
+              {t('common.clear')}
             </button>
           )}
         </div>
       </div>
-      {meetings?.length === 0 && <p className="text-slate-500">No meetings yet. Tap Record to start.</p>}
+
+      {meetings?.length === 0 && <p className="text-slate-500 dark:text-slate-400">{t('dashboard.empty')}</p>}
       {meetings && meetings.length > 0 && filtered?.length === 0 && (
-        <p className="text-slate-500">No meetings match your filters.</p>
+        <p className="text-slate-500 dark:text-slate-400">{t('dashboard.noMatch')}</p>
       )}
       <ul className="flex flex-col gap-2">
         {filtered?.map((m) => {
           const prog = running[m.id]
           const total = prog?.total || m.audio_parts.length
           const processed = prog?.processed ?? m.processed_parts
+          const status = prog ? (prog.stage ?? 'transcribing') : m.status
           const canStart =
             !prog &&
             (m.status === 'uploaded' ||
@@ -157,23 +174,31 @@ export default function Dashboard() {
               <Link to={`/meeting/${m.id}`} className="block font-medium">
                 {m.title}
               </Link>
-              <div className="flex gap-2 text-xs text-slate-500">
-                <span>{new Date(m.meeting_date).toLocaleDateString()}</span>
-                <span>{m.language}</span>
+              <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+                <span>{new Date(m.meeting_date).toLocaleDateString(lang)}</span>
+                <span>{t(`lang.${m.language}` as TKey)}</span>
                 {m.duration_seconds != null && <span>{formatClock(m.duration_seconds)}</span>}
-                <span className="ml-auto rounded bg-slate-100 px-2 dark:bg-slate-800">{prog ? (prog.stage ?? 'transcribing') : m.status}</span>
+                <span className={`ml-auto rounded px-2 py-0.5 font-medium ${STATUS_STYLE[status] ?? STATUS_STYLE.uploaded}`}>
+                  {t(`status.${status}` as TKey)}
+                </span>
               </div>
               {prog && total > 0 && (
-                <div className="mt-2 h-1.5 overflow-hidden rounded bg-slate-200 dark:bg-slate-800">
+                <div
+                  className="mt-2 h-1.5 overflow-hidden rounded bg-slate-200 dark:bg-slate-800"
+                  role="progressbar"
+                  aria-valuemin={0}
+                  aria-valuemax={total}
+                  aria-valuenow={processed}
+                >
                   <div className="h-full bg-indigo-600" style={{ width: `${(processed / total) * 100}%` }} />
                 </div>
               )}
               {m.status === 'failed' && !prog && m.error_message && (
-                <p className="mt-2 text-xs text-red-600">{m.error_message}</p>
+                <p className="mt-2 text-xs text-red-600 dark:text-red-400">{m.error_message}</p>
               )}
               {canStart && (
-                <button onClick={() => run(m.id)} className="mt-2 rounded bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white">
-                  {m.status === 'failed' ? 'Retry' : m.status === 'uploaded' ? 'Generate notes' : 'Resume'}
+                <button onClick={() => run(m.id)} className="mt-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white">
+                  {m.status === 'failed' ? t('common.retry') : m.status === 'uploaded' ? t('dashboard.generate') : t('dashboard.resume')}
                 </button>
               )}
             </li>
@@ -182,8 +207,8 @@ export default function Dashboard() {
       </ul>
       <Link
         to="/record"
-        className="fixed bottom-6 right-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-600 text-white shadow-lg"
-        aria-label="New recording"
+        className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-600 text-2xl text-white shadow-lg"
+        aria-label={t('dashboard.newRecording')}
       >
         ●
       </Link>

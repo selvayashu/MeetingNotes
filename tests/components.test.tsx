@@ -33,6 +33,7 @@ vi.mock('../src/lib/supabase', () => {
   }
 })
 
+import { I18nProvider } from '../src/i18n/I18nProvider'
 import TranscriptTab from '../src/components/TranscriptTab'
 import ActionItemsTab from '../src/components/ActionItemsTab'
 
@@ -52,7 +53,11 @@ const segments: Segment[] = [
 describe('TranscriptTab', () => {
   const setup = (props: Partial<Parameters<typeof TranscriptTab>[0]> = {}) => {
     const onSeek = vi.fn()
-    render(<TranscriptTab segments={segments} currentMs={0} playing={false} canSeek onSeek={onSeek} {...props} />)
+    render(
+      <I18nProvider>
+        <TranscriptTab segments={segments} currentMs={0} playing={false} canSeek onSeek={onSeek} {...props} />
+      </I18nProvider>,
+    )
     return { onSeek, user: userEvent.setup() }
   }
 
@@ -91,6 +96,30 @@ describe('TranscriptTab', () => {
   })
 })
 
+describe('language switching', () => {
+  it('renders the UI in the saved language, with Tamil and Hindi plural/placeholder forms', () => {
+    localStorage.setItem('meetnotes.lang', 'ta')
+    render(
+      <I18nProvider>
+        <TranscriptTab segments={segments} currentMs={0} playing={false} canSeek onSeek={() => {}} />
+      </I18nProvider>,
+    )
+    expect(screen.getByLabelText('எழுத்துப்படியில் தேடு')).toBeTruthy()
+    expect(document.documentElement.lang).toBe('ta')
+    localStorage.removeItem('meetnotes.lang')
+  })
+
+  it('falls back to the browser language, then English', () => {
+    localStorage.removeItem('meetnotes.lang')
+    render(
+      <I18nProvider>
+        <TranscriptTab segments={segments} currentMs={0} playing={false} canSeek onSeek={() => {}} />
+      </I18nProvider>,
+    )
+    expect(screen.getByLabelText('Search transcript')).toBeTruthy()
+  })
+})
+
 describe('ActionItemsTab', () => {
   const items: ActionItem[] = [
     { id: 'a', task: 'Press release', owner: 'Priya', due_date: '2026-10-28', is_done: false },
@@ -108,7 +137,7 @@ describe('ActionItemsTab', () => {
 
   it('ticking an item updates it optimistically and saves', async () => {
     const user = userEvent.setup()
-    render(<Harness />)
+    render(<I18nProvider><Harness /></I18nProvider>)
     await user.click(screen.getByLabelText('Mark done: Press release'))
     expect(screen.getByTestId('done').textContent).toBe('a')
     await waitFor(() => expect(db.calls).toHaveLength(1))
@@ -118,7 +147,7 @@ describe('ActionItemsTab', () => {
   it('rolls the checkbox back and shows the error if the save fails', async () => {
     db.result = { data: null, error: { message: 'permission denied' } }
     const user = userEvent.setup()
-    render(<Harness />)
+    render(<I18nProvider><Harness /></I18nProvider>)
     await user.click(screen.getByLabelText('Mark done: Press release'))
     expect(await screen.findByRole('alert')).toHaveProperty('textContent', 'permission denied')
     expect(screen.getByTestId('done').textContent).toBe('')
@@ -126,7 +155,7 @@ describe('ActionItemsTab', () => {
 
   it('saves an edited task on blur, but not an unchanged or emptied one', async () => {
     const user = userEvent.setup()
-    render(<Harness />)
+    render(<I18nProvider><Harness /></I18nProvider>)
     const task = screen.getAllByLabelText('Task')[0] as HTMLInputElement
     await user.click(task)
     await user.tab() // blur, unchanged
@@ -144,8 +173,8 @@ describe('ActionItemsTab', () => {
   it('adds a new item and deletes one', async () => {
     db.result = { data: { id: 'c', task: 'Book room', owner: null, due_date: null, is_done: false }, error: null }
     const user = userEvent.setup()
-    render(<Harness />)
-    await user.type(screen.getByLabelText('New action item'), 'Book room')
+    render(<I18nProvider><Harness /></I18nProvider>)
+    await user.type(screen.getByLabelText('Add an action item'), 'Book room')
     await user.click(screen.getByRole('button', { name: 'Add' }))
     expect(await screen.findByDisplayValue('Book room')).toBeTruthy()
     expect(db.calls[0]).toMatchObject({ op: 'insert', payload: { meeting_id: 'm1', task: 'Book room' } })

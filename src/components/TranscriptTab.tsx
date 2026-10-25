@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
+import { useI18n } from '../i18n/context'
 import { formatTimestamp } from '../lib/export'
 import { activeSegmentIndex } from '../lib/timeline'
 import type { Segment } from '../lib/types'
@@ -32,6 +33,7 @@ interface Props {
 }
 
 export default function TranscriptTab({ segments, currentMs, playing, canSeek, onSeek }: Props) {
+  const { t } = useI18n()
   const [query, setQuery] = useState('')
   const q = query.trim()
   const activeRef = useRef<HTMLLIElement>(null)
@@ -50,7 +52,7 @@ export default function TranscriptTab({ segments, currentMs, playing, canSeek, o
     if (playing && !q) activeRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })
   }, [activeId, playing, q])
 
-  if (segments.length === 0) return <p className="text-slate-500">No transcript for this meeting.</p>
+  if (segments.length === 0) return <p className="text-slate-500 dark:text-slate-400">{t('transcript.none')}</p>
 
   return (
     <div className="flex flex-col gap-3">
@@ -58,13 +60,13 @@ export default function TranscriptTab({ segments, currentMs, playing, canSeek, o
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search transcript"
-        aria-label="Search transcript"
+        placeholder={t('transcript.search')}
+        aria-label={t('transcript.search')}
         className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900"
       />
       {q && (
-        <p className="text-xs text-slate-500" aria-live="polite">
-          {visible.length} match{visible.length === 1 ? '' : 'es'}
+        <p className="text-xs text-slate-500 dark:text-slate-400" aria-live="polite">
+          {visible.length === 1 ? t('transcript.matchOne') : t('transcript.matchMany', { n: visible.length })}
         </p>
       )}
       <ul className="flex flex-col gap-1">

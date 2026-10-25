@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from 'react'
+import { useI18n } from '../i18n/context'
+import { UI_LANGS, type UiLang } from '../i18n/translate'
 import { supabase } from '../lib/supabase'
 
 type Step = 'email' | 'code'
@@ -9,6 +11,7 @@ const btnCls =
   'w-full rounded-lg bg-indigo-600 px-4 py-3 font-semibold text-white disabled:opacity-60'
 
 export default function Login() {
+  const { t, lang, setLang } = useI18n()
   const [step, setStep] = useState<Step>('email')
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
@@ -49,8 +52,22 @@ export default function Login() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-5 px-4">
-      <h1 className="text-3xl font-bold">MeetNotes</h1>
-      <p className="text-slate-500">Sign in to record and summarise your meetings.</p>
+      <div className="flex items-start justify-between">
+        <h1 className="text-3xl font-bold">MeetNotes</h1>
+        <select
+          value={lang}
+          onChange={(e) => setLang(e.target.value as UiLang)}
+          aria-label="Language"
+          className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900"
+        >
+          {UI_LANGS.map((l) => (
+            <option key={l.code} value={l.code}>
+              {l.native}
+            </option>
+          ))}
+        </select>
+      </div>
+      <p className="text-slate-500 dark:text-slate-400">{t('login.subtitle')}</p>
 
       {step === 'email' ? (
         <form onSubmit={sendCode} className="flex flex-col gap-3">
@@ -59,48 +76,49 @@ export default function Login() {
             required
             autoComplete="email"
             placeholder="you@example.com"
+            aria-label="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className={inputCls}
           />
           <button disabled={busy} className={btnCls}>
-            {busy ? 'Sending…' : 'Email me a sign-in code'}
+            {busy ? t('login.sending') : t('login.sendCode')}
           </button>
         </form>
       ) : (
         <form onSubmit={verifyCode} className="flex flex-col gap-3">
-          <p className="text-sm">
-            We sent a code to <b>{email}</b>. Enter it below, or tap the link in the email.
-          </p>
+          <p className="text-sm">{t('login.sentTo', { email })}</p>
           <input
             inputMode="numeric"
             autoComplete="one-time-code"
             required
             placeholder="123456"
+            aria-label="Code"
             value={code}
             onChange={(e) => setCode(e.target.value)}
             className={inputCls + ' text-center tracking-widest'}
           />
           <button disabled={busy} className={btnCls}>
-            {busy ? 'Verifying…' : 'Verify'}
+            {busy ? t('login.verifying') : t('login.verify')}
           </button>
-          <button type="button" onClick={() => setStep('email')} className="text-sm text-slate-500 underline">
-            Use a different email
+          <button type="button" onClick={() => setStep('email')} className="text-sm text-slate-500 dark:text-slate-400 underline">
+            {t('login.otherEmail')}
           </button>
         </form>
       )}
 
       <div className="flex items-center gap-3 text-xs text-slate-400">
-        <hr className="flex-1" /> or <hr className="flex-1" />
+        <hr className="flex-1 border-slate-200 dark:border-slate-800" /> {t('login.or')}{' '}
+        <hr className="flex-1 border-slate-200 dark:border-slate-800" />
       </div>
       <button
         onClick={google}
         className="w-full rounded-lg border border-slate-300 px-4 py-3 font-semibold dark:border-slate-700"
       >
-        Continue with Google
+        {t('login.google')}
       </button>
 
-      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+      {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
     </main>
   )
 }
