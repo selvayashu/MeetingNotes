@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { isCronCaller } from '../lib/cron'
 import type { Env, MeetingRow } from '../lib/env'
 import { partOffsetMs, toSegmentRows } from '../lib/segments'
 import { runSummaryStage } from '../lib/summaryStage'
@@ -10,6 +11,12 @@ import { transcribe } from '../lib/whisper'
  * Processing is incremental: each call transcribes as many audio parts as fit in
  * TIME_BUDGET_MS, saves progress, and returns { done, processed, total }. The client calls it
  * again until done. A retry after failure resumes from the first untranscribed part.
+ *
+ * Two kinds of caller:
+ *  - the signed-in user's browser (Authorization: Bearer <Supabase JWT>), and
+ *  - the Supabase scheduler (header x-cron-secret), which keeps unfinished meetings moving after the user has
+ *    closed the tab. A scheduler call acts on behalf of the meeting's owner and is subject to every check a
+ *    user call is (approval, audio paths, limits); it only skips the login.
  */
 
 const TIME_BUDGET_MS = 35_000
@@ -61,9 +68,13 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   let db: SupabaseClient | undefined
   let meetingId: string | undefined
   let locked = false
+  let cron = false
 
   try {
-    const userId = await authenticate(request, env)
+    let userId = ''
+    cron = await isCronCaller(request.headers.get('x-cron-secret'), env.CRON_SECRET)
+    if (request.headers.get('x-cron-secret') && !cron) throw new HttpError(401, 'Invalid credentials')
+    if (!cron) userId = await authenticate(request, env)
     const body = (await request.json().catch(() => null)) as { meetingId?: string } | null
     meetingId = body?.meetingId
     if (!meetingId || !/^[0-9a-f-]{36}$/i.test(meetingId)) throw new HttpError(400, 'meetingId required')
@@ -73,13 +84,20 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     })
 
     // The service role bypasses RLS, so enforce admin approval here too (first, before any work).
-    const { data: profile } = await db.from('profiles').select('status').eq('id', userId).maybeSingle()
-    if (profile?.status !== 'approved') throw new HttpError(403, 'Your account is not approved yet.')
+    const assertApproved = async (uid: string) => {
+      const { data: profile } = await db!.from('profiles').select('status').eq('id', uid).maybeSingle()
+      if (profile?.status !== 'approved') throw new HttpError(403, 'Your account is not approved yet.')
+    }
+    if (!cron) await assertApproved(userId)
 
     const { data: m } = await db.from('meetings').select('*').eq('id', meetingId).maybeSingle()
     // Same response for "missing" and "not yours" so ids can't be probed.
-    if (!m || m.user_id !== userId) throw new HttpError(404, 'Meeting not found')
+    if (!m || (!cron && m.user_id !== userId)) throw new HttpError(404, 'Meeting not found')
     const meeting = m as MeetingRow
+    if (cron) {
+      userId = meeting.user_id // the scheduler acts for the owner...
+      await assertApproved(userId) // ...and only while the owner is still approved
+    }
 
     if (meeting.status === 'done') {
       return json({ done: true, stage: 'done', status: 'done', processed: 1, total: 1 })
@@ -193,6 +211,11 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     const status = err instanceof HttpError ? err.status : 500
     const message = err instanceof Error ? err.message : 'Processing failed'
     if (status === 500) console.error('process-meeting error', err)
+
+    // Over the daily limit: stop the scheduler retrying this meeting every minute. The user can still start it by hand.
+    if (cron && status === 429 && db && meetingId) {
+      await db.from('meetings').update({ auto_attempts: 999 }).eq('id', meetingId)
+    }
 
     // Auth / validation / rate-limit rejections leave the meeting untouched.
     if (db && meetingId && (locked || status === 500 || status === 422)) {

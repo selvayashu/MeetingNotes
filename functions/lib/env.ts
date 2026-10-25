@@ -8,6 +8,8 @@ export interface Env {
   MAX_RECORDING_MINUTES?: string
   /** Override the notes LLM (default: Llama 3.3 70B fp8-fast). */
   LLM_MODEL?: string
+  /** Shared secret the Supabase scheduler sends in x-cron-secret. Unset disables background processing. */
+  CRON_SECRET?: string
 }
 
 export interface AudioPart {

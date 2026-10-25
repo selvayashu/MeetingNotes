@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import ActionItemsTab from '../components/ActionItemsTab'
 import AudioBar from '../components/AudioBar'
@@ -43,6 +43,17 @@ export default function MeetingDetail() {
   const parts = useMemo(() => data?.meeting.audio_parts ?? [], [data?.meeting.audio_parts])
   const player = useAudioTimeline(parts)
   const hasAudio = parts.length > 0
+
+  // If the server is finishing this meeting in the background, follow along without a manual refresh.
+  const status = data?.meeting.status
+  const inProgress = status === 'uploaded' || status === 'transcribing' || status === 'summarising'
+  useEffect(() => {
+    if (!inProgress || running) return
+    const timer = setInterval(() => {
+      if (document.visibilityState === 'visible') void reload()
+    }, 10_000)
+    return () => clearInterval(timer)
+  }, [inProgress, running, reload])
 
   const say = (msg: string) => {
     setFlash(msg)
@@ -240,13 +251,16 @@ export default function MeetingDetail() {
           {running ? (
             <p className="text-sm text-slate-500 dark:text-slate-400">{running}</p>
           ) : (
-            <button onClick={run} className="rounded-lg bg-indigo-600 px-4 py-2.5 font-semibold text-white">
-              {meeting.status === 'failed'
-                ? t('common.retry')
-                : meeting.status === 'uploaded'
-                  ? t('dashboard.generate')
-                  : t('dashboard.resume')}
-            </button>
+            <>
+              {inProgress && <p className="text-sm text-slate-500 dark:text-slate-400">{t('detail.backgroundNote')}</p>}
+              <button onClick={run} className="rounded-lg bg-indigo-600 px-4 py-2.5 font-semibold text-white">
+                {meeting.status === 'failed'
+                  ? t('common.retry')
+                  : meeting.status === 'uploaded'
+                    ? t('dashboard.generate')
+                    : t('dashboard.resume')}
+              </button>
+            </>
           )}
         </div>
       ) : (

@@ -19,8 +19,9 @@ How processing works (details and measurements in [`docs/workers-ai-notes.md`](d
 
 1. Recordings are cut into ~5 minute self-contained segments in the browser (uploaded WAV files are sliced
    client-side), because the server has no ffmpeg to cut webm/mp4.
-2. `/api/process-meeting` transcribes parts for up to ~35 s per call, saves progress, and the app calls it
-   again until done. Retrying resumes from the first unfinished part.
+2. `/api/process-meeting` transcribes parts for up to ~35 s per call and saves progress. The open tab keeps calling it
+   until done; if the tab is closed, a Supabase scheduler (see *Background processing*) calls it every minute instead.
+   Retrying resumes from the first unfinished part.
 3. It then summarises the transcript chunk by chunk (map) and merges the results (reduce), validating the
    model's JSON with Zod and retrying once on bad output or the wrong language.
 
@@ -153,6 +154,41 @@ in `/api/process-meeting`, so hiding a button is not the only protection.
   loads their profile.
 - There is **no e-mail notification** when someone signs up; check the Admin page.
 
+## Background processing (free)
+
+Processing no longer needs the browser tab. Every minute a Supabase `pg_cron` job calls `public.kick_processing()`, which
+asks `public.pending_processing_ids()` for up to 3 meetings that are unfinished and unlocked (approved owner, audio present,
+younger than 7 days, fewer than 40 attempts; *failed* meetings wait for a manual Retry) and POSTs each to
+`/api/process-meeting` with a shared secret in the `x-cron-secret` header (via `pg_net`). The function then acts for the
+meeting's owner and applies every normal check (approval, audio paths, daily limit); it only skips the login. A fresh upload
+gets a 45 s head start so the open tab goes first. Both can run at once: a database lock lets only one work on a meeting.
+Everything used (`pg_cron`, `pg_net`, Vault) is included in Supabase's free tier.
+
+One-time setup (the secret never goes in git):
+1. Pick a random secret and store it in **both** places:
+   - Supabase Vault: `select vault.create_secret('<secret>', 'meetnotes_cron_secret');`
+   - Cloudflare Pages secret `CRON_SECRET` (`npx wrangler pages secret put CRON_SECRET --project-name <name>`), then redeploy.
+2. Tell the database where the function lives:
+   `insert into public.app_config values ('process_url', 'https://<your-site>/api/process-meeting');`
+3. `npx supabase db push` (migration `..._background_cron.sql` enables the extensions and schedules the job).
+
+Turn it off with `select cron.unschedule('meetnotes-process-pending');`. If `CRON_SECRET` is not set on the site, scheduler calls
+are refused (401) and the app behaves exactly as before.
+
+## Crash-safe recording
+
+While recording, every ~1 s audio chunk is also written to IndexedDB (`src/lib/drafts.ts`). If the tab or browser dies, the
+next visit to the Record page (or a hint on the dashboard) offers **Recover it**; the recovered audio is saved through the normal
+upload path. The safety copy is deleted once the recording is in the upload queue. At most about a second of audio is lost.
+This relies on the browser's storage (private/incognito windows may refuse it; the app then records without a safety copy).
+
+## Speech-to-text accuracy
+
+Measured on real speech (Google FLEURS): English about 5% word errors; Hindi about 30% word / 10-15% character errors with the
+language chosen (49% with Auto-detect, which picks the wrong language 1 time in 4); **Tamil about 75% word / 30% character errors**
+and is flagged as limited in the app. Silence produces no text. Full table, method and the Whisper settings we tried:
+[`docs/accuracy.md`](docs/accuracy.md). Reproduce with `scripts/benchmark-asr.mjs`.
+
 ## 4. Configuration reference
 
 | Variable | Where | Purpose |
@@ -163,6 +199,7 @@ in `/api/process-meeting`, so hiding a button is not the only protection.
 | `MAX_MEETINGS_PER_DAY` | `wrangler.toml` `[vars]` | Per-user daily rate limit (default 10) |
 | `MAX_RECORDING_MINUTES` | `wrangler.toml` `[vars]` | Server length cap (default 90) |
 | `LLM_MODEL` | `[vars]` / `.dev.vars` | Override the notes model |
+| `CRON_SECRET` | secret | Lets the Supabase scheduler call `/api/process-meeting` (background processing) |
 | `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN` | CI only | Deploying outside the Git integration |
 
 Per-user setting: **Settings → Delete audio after notes are generated** removes the recordings once notes exist.
@@ -255,9 +292,9 @@ Automated: `npm test` and `npm run typecheck` must pass. Manual (needs a live Su
 
 ## 7. Known limitations
 
-- Processing is driven by the open tab; closing it pauses processing until you press Resume.
-- A tab crash mid-recording loses the current segment (completed segments are only saved after you stop).
+- Background processing runs once a minute, so closing the tab can add up to a minute of delay between steps.
+- A crash can still lose about the last second of a recording (see *Crash-safe recording*).
 - Segment boundaries in long recordings can clip a word.
 - Non-WAV uploads are sent as one part (≤ 16 MB); long mp3/m4a files must be converted to WAV or split first.
 - Speaker labels (`speaker_label`) are in the schema but not populated.
-- Hindi/Tamil transcription and note quality have not been measured on real meeting audio.
+- Speech accuracy was measured on clean read speech, not real meetings, and **mixed Hindi-English / Tamil-English speech has not been measured**. Tamil accuracy is poor (see above).

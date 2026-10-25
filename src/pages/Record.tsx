@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { useDraftRecovery } from '../hooks/useDraftRecovery'
 import { useRecorder } from '../hooks/useRecorder'
 import { useI18n } from '../i18n/context'
 import {
@@ -10,6 +11,8 @@ import {
   partsFromFile,
   type UploadPart,
 } from '../lib/audio'
+import { deleteDraft, loadDraftParts } from '../lib/drafts'
+import { readSpokenLanguage, saveSpokenLanguage } from '../lib/spokenLanguage'
 import type { Lang } from '../lib/types'
 import { submitRecording } from '../lib/upload'
 
@@ -18,18 +21,21 @@ const fieldCls =
 
 export default function Record() {
   const { user } = useAuth()
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   const navigate = useNavigate()
-  const rec = useRecorder()
+  const rec = useRecorder(user?.id)
+  const { found: lost, refresh: refreshLost } = useDraftRecovery(user?.id, rec.getDraftId())
   const fileInput = useRef<HTMLInputElement>(null)
 
   const [title, setTitle] = useState('')
-  const [language, setLanguage] = useState<Lang>('auto')
+  const [language, setLanguage] = useState<Lang>(() => readSpokenLanguage(lang))
   const [notesLanguage, setNotesLanguage] = useState<Lang>('en')
   const [file, setFile] = useState<File | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  // A recording recovered after a crash; it is saved through the normal path below.
+  const [recovered, setRecovered] = useState<{ draftId: string; parts: UploadPart[] } | null>(null)
 
   // Multi-segment recordings can't be previewed as one file, so only preview a single segment.
   const previewUrl = useMemo(
@@ -41,15 +47,16 @@ export default function Record() {
   }, [previewUrl])
 
   const active = rec.state === 'recording' || rec.state === 'paused'
-  const hasAudio = Boolean(rec.result || file)
+  const hasAudio = Boolean(rec.result || file || recovered)
+  const recoveredSeconds = recovered?.parts.reduce((s, p) => s + (p.durationSeconds ?? 0), 0) ?? 0
 
   async function save() {
     if (!user) return
-    if (!rec.result && !file) return
+    if (!rec.result && !file && !recovered) return
     setBusy(true)
     setError(null)
     try {
-      const parts: UploadPart[] = rec.result ? rec.result.parts : await partsFromFile(file!)
+      const parts: UploadPart[] = recovered?.parts ?? rec.result?.parts ?? (await partsFromFile(file!))
       const duration = parts.every((p) => p.durationSeconds != null)
         ? parts.reduce((s, p) => s + (p.durationSeconds ?? 0), 0)
         : null
@@ -63,10 +70,14 @@ export default function Record() {
         language,
         notesLanguage,
       })
+      // The recording is now in the upload queue, so the safety copy is no longer needed.
+      await rec.discardDraft()
+      if (recovered) await deleteDraft(recovered.draftId)
       if (res.queued) {
         setNotice(t('record.offlineSaved'))
         rec.reset()
         setFile(null)
+        setRecovered(null)
       } else {
         navigate(`/?process=${res.id}`)
       }
@@ -81,6 +92,40 @@ export default function Record() {
     <div className="flex flex-col gap-5">
       <h2 className="text-xl font-semibold">{t('record.title')}</h2>
 
+      {lost && !active && !hasAudio && (
+        <div
+          role="status"
+          className="flex flex-col gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-100"
+        >
+          <p>
+            {t('draft.found', {
+              when: new Date(lost.draft.startedAt).toLocaleString(lang),
+              min: Math.max(1, Math.round(lost.chunkCount / 60)),
+            })}
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={async () => {
+                setRecovered({ draftId: lost.draft.id, parts: await loadDraftParts(lost.draft.id) })
+                void refreshLost()
+              }}
+              className="rounded-lg bg-amber-600 px-3 py-2 font-semibold text-white"
+            >
+              {t('draft.recover')}
+            </button>
+            <button
+              onClick={async () => {
+                await deleteDraft(lost.draft.id)
+                void refreshLost()
+              }}
+              className="rounded-lg border border-amber-400 px-3 py-2 dark:border-amber-600"
+            >
+              {t('common.discard')}
+            </button>
+          </div>
+        </div>
+      )}
+
       <input
         className={fieldCls}
         placeholder={t('record.titlePlaceholder')}
@@ -92,7 +137,14 @@ export default function Record() {
       <div className="grid grid-cols-2 gap-3 text-sm">
         <label className="flex flex-col gap-1">
           {t('record.spoken')}
-          <select className={fieldCls} value={language} onChange={(e) => setLanguage(e.target.value as Lang)}>
+          <select
+            className={fieldCls}
+            value={language}
+            onChange={(e) => {
+              setLanguage(e.target.value as Lang)
+              saveSpokenLanguage(e.target.value as Lang)
+            }}
+          >
             <option value="auto">{t('lang.auto')}</option>
             <option value="en">{t('lang.en')}</option>
             <option value="hi">{t('lang.hi')}</option>
@@ -112,9 +164,12 @@ export default function Record() {
         </label>
       </div>
 
+      {language === 'auto' && <p className="-mt-2 text-xs text-slate-500 dark:text-slate-400">{t('record.langHint')}</p>}
+      {language === 'ta' && <p className="-mt-2 text-xs text-amber-700 dark:text-amber-400">{t('record.tamilNote')}</p>}
+
       <section className="flex flex-col items-center gap-4 rounded-2xl border border-slate-200 p-6 dark:border-slate-800">
         <div className="font-mono text-4xl tabular-nums" aria-live="off">
-          {formatClock(rec.state === 'stopped' ? (rec.result?.durationSeconds ?? 0) : rec.elapsed)}
+          {formatClock(recovered ? recoveredSeconds : rec.state === 'stopped' ? (rec.result?.durationSeconds ?? 0) : rec.elapsed)}
         </div>
 
         <div
@@ -157,7 +212,13 @@ export default function Record() {
           <p className="text-sm text-slate-500 dark:text-slate-400">{t('record.segments', { n: rec.result.parts.length })}</p>
         )}
 
-        {!active && !rec.result && (
+        {recovered && (
+          <p className="text-sm text-emerald-700 dark:text-emerald-400">
+            {t('draft.recovered', { min: Math.max(1, Math.round(recoveredSeconds / 60)) })}
+          </p>
+        )}
+
+        {!active && !rec.result && !recovered && (
           <>
             <input
               ref={fileInput}
@@ -179,6 +240,9 @@ export default function Record() {
             onClick={() => {
               rec.reset()
               setFile(null)
+              void rec.discardDraft()
+              if (recovered) void deleteDraft(recovered.draftId)
+              setRecovered(null)
             }}
             className="rounded-lg border border-slate-300 px-4 py-3 dark:border-slate-700"
           >

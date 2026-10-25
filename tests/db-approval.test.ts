@@ -22,7 +22,7 @@ describe('admin approval (database policies)', () => {
         $$ select string_to_array(name, '/') $$;
       grant usage on schema auth, storage, public to authenticated, anon;
     `)
-    const files = fs.readdirSync(dir).sort()
+    const files = fs.readdirSync(dir).sort().filter((n) => !n.includes('cron'))
     const A = '00000000-0000-0000-0000-00000000000a' // legacy user (exists before migration 5)
     const ADM = '00000000-0000-0000-0000-0000000000ad' // bootstrap admin
     const P = '00000000-0000-0000-0000-0000000000b1' // new, pending

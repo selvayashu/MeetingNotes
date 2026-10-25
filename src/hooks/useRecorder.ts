@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { MAX_RECORDING_SECONDS, SEGMENT_SECONDS, pickRecorderMime } from '../lib/audio'
+import { appendChunk, closeSegment, createDraft, deleteDraft } from '../lib/drafts'
 
 export type RecorderError = 'unsupported' | 'denied' | 'nomic' | 'start' | 'failed'
 export type RecorderState = 'idle' | 'recording' | 'paused' | 'stopped'
@@ -18,8 +19,11 @@ export interface RecordedAudio {
  * Records from the mic as a series of self-contained segments (~SEGMENT_SECONDS each).
  * The server can't cut webm/mp4 without ffmpeg, so each segment is its own valid file
  * that Whisper can transcribe independently.
+ *
+ * With a `userId`, every chunk is also written to IndexedDB as it arrives (lib/drafts.ts), so a crash loses
+ * at most about a second of audio and the recording can be recovered on the next visit.
  */
-export function useRecorder() {
+export function useRecorder(userId?: string) {
   const [state, setState] = useState<RecorderState>('idle')
   const [elapsed, setElapsed] = useState(0)
   const [level, setLevel] = useState(0)
@@ -33,6 +37,8 @@ export function useRecorder() {
   const finishing = useRef(false)
   const segmentStart = useRef(0) // recording-seconds at which the current segment began
   const stopSegment = useRef<((at: number) => void) | null>(null)
+  const draftId = useRef<string | null>(null)
+  const segIndex = useRef(0)
   const audioCtx = useRef<AudioContext | null>(null)
   const raf = useRef(0)
   const wakeLock = useRef<WakeLockSentinel | null>(null)
@@ -62,10 +68,18 @@ export function useRecorder() {
     const s = stream.current
     if (!s) return
     const chunks: Blob[] = []
+    const segNo = segIndex.current++
+    let seq = 0
     const seg = { begin: currentElapsed(), end: 0 }
     const rec = new MediaRecorder(s, mime.current ? { mimeType: mime.current, audioBitsPerSecond: 32000 } : undefined)
-    rec.ondataavailable = (e) => e.data.size > 0 && chunks.push(e.data)
+    rec.ondataavailable = (e) => {
+      if (e.data.size === 0) return
+      chunks.push(e.data)
+      // Best effort: never let a storage problem interrupt the recording itself.
+      if (draftId.current) void appendChunk(draftId.current, segNo, seq++, e.data).catch(() => {})
+    }
     rec.onstop = () => {
+      if (draftId.current) void closeSegment(draftId.current, segNo, seg.end - seg.begin).catch(() => {})
       parts.current.push({
         blob: new Blob(chunks, { type: rec.mimeType || mime.current || 'audio/webm' }),
         durationSeconds: Math.round(seg.end - seg.begin),
@@ -116,6 +130,16 @@ export function useRecorder() {
       mime.current = pickRecorderMime()
       parts.current = []
       finishing.current = false
+      segIndex.current = 0
+      draftId.current = null
+      if (userId) {
+        try {
+          draftId.current = await createDraft(userId, mime.current ?? 'audio/webm')
+        } catch {
+          /* private mode or storage blocked: record without a safety copy */
+        }
+        void navigator.storage?.persist?.() // ask the browser not to evict the safety copy under pressure
+      }
 
       // Mic level meter
       const ctx = new AudioContext()
@@ -172,7 +196,7 @@ export function useRecorder() {
             : 'start',
       )
     }
-  }, [cleanup, startSegment, stop])
+  }, [cleanup, startSegment, stop, userId])
 
   const pause = useCallback(() => {
     if (recorder.current?.state !== 'recording') return
@@ -195,5 +219,14 @@ export function useRecorder() {
     setState('idle')
   }, [])
 
-  return { state, elapsed, level, error, result, start, pause, resume, stop, reset }
+  /** The safety copy of the current recording (null if none). Excluded from the "recover" prompt. */
+  const getDraftId = useCallback(() => draftId.current, [])
+  /** Delete the safety copy once the recording is safely in the upload queue, or when the user discards it. */
+  const discardDraft = useCallback(async () => {
+    const id = draftId.current
+    draftId.current = null
+    if (id) await deleteDraft(id).catch(() => {})
+  }, [])
+
+  return { state, elapsed, level, error, result, start, pause, resume, stop, reset, getDraftId, discardDraft }
 }

@@ -194,5 +194,14 @@
   "resetpw.saving": "Saving…",
   "resetpw.done": "Your password has been changed.",
   "settings.changePassword": "Change password",
-  "settings.passwordChanged": "Password changed."
+  "settings.passwordChanged": "Password changed.",
+
+  "draft.found": "An unsaved recording from {when} was found (about {min} min). It was probably interrupted.",
+  "draft.recover": "Recover it",
+  "draft.recovered": "Recovered recording (about {min} min)",
+  "draft.dashboardHint": "You have an unsaved recording.",
+  "draft.open": "Review",
+  "detail.backgroundNote": "You can leave this page: processing continues in the background and the notes will appear here.",
+  "record.langHint": "Tip: choosing the spoken language is noticeably more accurate than Auto-detect, especially for Hindi and Tamil.",
+  "record.tamilNote": "Tamil speech recognition is still limited and often makes mistakes. Check important details against the audio."
 }

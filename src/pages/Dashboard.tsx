@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { processMeeting } from '../lib/api'
 import { formatClock } from '../lib/audio'
 import { useAuth } from '../hooks/useAuth'
+import { useDraftRecovery } from '../hooks/useDraftRecovery'
 import { useQueueSync } from '../hooks/useQueueSync'
 import { useI18n } from '../i18n/context'
 import type { TKey } from '../i18n/translate'
@@ -88,6 +89,17 @@ export default function Dashboard() {
   }, [params, setParams, load, run])
 
   const { pending } = useQueueSync(user?.id, load)
+  const { found: lostRecording } = useDraftRecovery(user?.id)
+
+  // Meetings can also be finished by the server in the background (tab was closed, other device): keep the list fresh.
+  const anyActive = meetings?.some((m) => ['uploaded', 'transcribing', 'summarising'].includes(m.status)) ?? false
+  useEffect(() => {
+    if (!anyActive) return
+    const timer = setInterval(() => {
+      if (document.visibilityState === 'visible' && inFlight.current.size === 0) void load()
+    }, 15_000)
+    return () => clearInterval(timer)
+  }, [anyActive, load])
 
   const [query, setQuery] = useState('')
   const [langFilter, setLangFilter] = useState('')
@@ -106,6 +118,14 @@ export default function Dashboard() {
   return (
     <div className="flex flex-col gap-4">
       <h2 className="text-xl font-semibold">{t('dashboard.title')}</h2>
+      {lostRecording && (
+        <p className="flex items-center justify-between gap-3 rounded-lg bg-amber-100 p-3 text-sm text-amber-900 dark:bg-amber-900/40 dark:text-amber-100">
+          <span>{t('draft.dashboardHint')}</span>
+          <Link to="/record" className="shrink-0 font-semibold underline">
+            {t('draft.open')}
+          </Link>
+        </p>
+      )}
       {pending > 0 && (
         <p className="rounded-lg bg-amber-100 p-3 text-sm text-amber-900 dark:bg-amber-900/40 dark:text-amber-100">
           {t(pending > 1 ? 'dashboard.pendingMany' : 'dashboard.pendingOne', { n: pending })}
