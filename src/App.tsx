@@ -1,6 +1,9 @@
+import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { isSupabaseConfigured } from './lib/supabase'
+import Dashboard from './pages/Dashboard'
 import Login from './pages/Login'
+import Record from './pages/Record'
 
 function Shell() {
   const { user, loading, signOut } = useAuth()
@@ -9,14 +12,19 @@ function Shell() {
   if (!user) return <Login />
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-3 px-4 py-6">
+    <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-4 px-4 py-6">
       <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">MeetNotes</h1>
+        <Link to="/" className="text-2xl font-bold">
+          MeetNotes
+        </Link>
         <button onClick={signOut} className="text-sm text-slate-500 underline">
           Sign out
         </button>
       </header>
-      <p className="text-slate-500">Signed in as {user.email}. Recording comes next.</p>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/record" element={<Record />} />
+      </Routes>
     </main>
   )
 }
@@ -35,9 +43,11 @@ export default function App() {
   }
   return (
     <div className="min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-      <AuthProvider>
-        <Shell />
-      </AuthProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <Shell />
+        </AuthProvider>
+      </BrowserRouter>
     </div>
   )
 }
