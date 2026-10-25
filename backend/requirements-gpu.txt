@@ -1,4 +1,0 @@
-# CUDA libraries for faster-whisper on an NVIDIA GPU. Install with INSTALL_EXTRAS="gpu"
-# and use docker-compose.gpu.yml.
-nvidia-cublas-cu12==12.4.5.8
-nvidia-cudnn-cu12==9.1.0.70

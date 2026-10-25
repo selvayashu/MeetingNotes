@@ -1,0 +1,4 @@
+-- Intentionally empty.
+-- MeetNotes has no reference data: profiles are created by a trigger on sign-up, and the
+-- private "recordings" bucket is created by migration 20261025000003_storage.sql.
+-- Add local-only fixtures here if you need them; this file runs on `supabase db reset`.

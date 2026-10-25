@@ -1,6 +1,0 @@
-# For backend/tests/smoke_test.py (no speech models needed)
-fastapi==0.115.6
-httpx==0.28.1
-pydantic==2.10.4
-python-multipart==0.0.20
-numpy
