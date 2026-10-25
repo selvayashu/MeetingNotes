@@ -9,13 +9,21 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
+      includeAssets: [
+        'favicon-32.png',
+        'apple-touch-icon.png',
+        'logo-light.png',
+        'logo-dark.png',
+        'mark-light.png',
+        'mark-dark.png',
+      ],
       manifest: {
         name: 'MeetNotes',
         short_name: 'MeetNotes',
         description: 'AI meeting notes in English, Hindi and Tamil',
-        theme_color: '#4f46e5',
-        background_color: '#ffffff',
+        // Matches the navy icon tile, so the install splash screen and title bar blend with the logo.
+        theme_color: '#0b1120',
+        background_color: '#0b1120',
         display: 'standalone',
         start_url: '/',
         icons: [

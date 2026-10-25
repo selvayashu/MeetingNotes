@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import Logo from '../components/Logo'
 import { useI18n } from '../i18n/context'
 import { UI_LANGS, type TKey, type UiLang } from '../i18n/translate'
 import { authErrorKey, isLinkError } from '../lib/authErrors'
@@ -92,6 +93,7 @@ export default function Login() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-5 px-4 py-8">
+      <Logo variant="full" className="h-14 w-auto self-start" />
       <div className="flex items-start justify-between">
         <h1 className="text-3xl font-bold">MeetNotes</h1>
         <select

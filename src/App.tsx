@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
 import ErrorBoundary from './components/ErrorBoundary'
+import Logo from './components/Logo'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { useProfile } from './hooks/useProfile'
 import { useI18n } from './i18n/context'
@@ -73,7 +74,8 @@ function Shell() {
   return (
     <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-4 px-4 pb-24 pt-[max(1.5rem,env(safe-area-inset-top))]">
       <header className="flex items-center justify-between">
-        <Link to="/" className="text-2xl font-bold">
+        <Link to="/" className="flex items-center gap-2 text-2xl font-bold">
+          <Logo variant="mark" className="h-8 w-auto" />
           MeetNotes
         </Link>
         <nav className="flex items-center gap-4 text-sm text-slate-500 underline dark:text-slate-400">

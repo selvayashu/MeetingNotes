@@ -174,7 +174,9 @@ The interface language (English / हिन्दी / தமிழ்) and ligh
 src/            React app: pages/, components/, hooks/, lib/ (supabase, upload queue, audio, wav, export), i18n/
 functions/      Pages Functions: api/process-meeting.ts, api/health.ts, lib/ (Whisper, notes LLM, stages)
 supabase/       migrations/ + seed.sql + config.toml
-public/         PWA icons
+public/         Logo and PWA icon files (generated, see Branding)
+design/         Logo.png: the original brand sheet the logo files are cut from
+scripts/        make-logo-assets.ps1 (regenerates the logo/icon files)
 tests/          Vitest unit and component tests
 docs/           Workers AI measurements and design notes
 ```
@@ -182,6 +184,14 @@ docs/           Workers AI measurements and design notes
 UI strings live in `src/i18n/{en,hi,ta}.json`. A test enforces identical keys and placeholders across all three.
 **The Hindi and Tamil translations were written by an AI and have not been reviewed by a native speaker. Please
 have one review them before launch.**
+
+### Branding
+
+The logo comes from `design/Logo.png` (an opaque brand sheet, so it can't be used directly in light *and* dark mode).
+`scripts/make-logo-assets.ps1` cuts the lockup and the hexagon mark out as transparent PNGs, makes a navy-text copy for
+light mode, and builds the favicon, `apple-touch-icon` and the 192/512 PWA icons on a navy tile. Run it on Windows with
+`powershell -ExecutionPolicy Bypass -File scripts/make-logo-assets.ps1`. The sheet is a raster, so for sharper icons
+replace it with an SVG or a larger PNG. `src/components/Logo.tsx` shows the right variant for the current theme.
 
 ## 6. Test checklist
 

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Logo from '../components/Logo'
 import { useAuth } from '../hooks/useAuth'
 import type { ApprovalStatus } from '../hooks/useProfile'
 import { useI18n } from '../i18n/context'
@@ -16,6 +17,7 @@ export default function PendingApproval({ status, refresh }: Props) {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-4 px-4">
+      <Logo variant="full" className="h-12 w-auto self-start" />
       <h1 className="text-2xl font-bold">{t(rejected ? 'approval.rejectedTitle' : 'approval.pendingTitle')}</h1>
       <p className="leading-relaxed">
         {t(rejected ? 'approval.rejectedBody' : 'approval.pendingBody', { email: user?.email ?? '' })}

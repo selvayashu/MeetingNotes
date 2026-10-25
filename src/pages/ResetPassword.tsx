@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import Logo from '../components/Logo'
 import { useAuth } from '../hooks/useAuth'
 import { useI18n } from '../i18n/context'
 import type { TKey } from '../i18n/translate'
@@ -33,6 +34,7 @@ export default function ResetPassword() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-4 px-4">
+      <Logo variant="full" className="h-12 w-auto self-start" />
       <h1 className="text-2xl font-bold">{t('resetpw.title')}</h1>
       {done ? (
         <>
