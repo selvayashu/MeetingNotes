@@ -7,6 +7,8 @@ export interface PendingRecording {
   /** One entry per self-contained audio segment, in order. */
   parts: { blob: Blob; durationSeconds: number | null; fileName?: string }[]
   title: string
+  /** The person recording confirmed everyone heard was told and agrees (absent on items queued before this existed). */
+  consent?: boolean
   language: 'en' | 'hi' | 'ta' | 'auto'
   notesLanguage: 'en' | 'hi' | 'ta' | 'auto'
   meetingDate: string

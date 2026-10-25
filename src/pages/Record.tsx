@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import ConsentNotice from '../components/ConsentNotice'
 import { useAuth } from '../hooks/useAuth'
 import { useDraftRecovery } from '../hooks/useDraftRecovery'
 import { useRecorder } from '../hooks/useRecorder'
@@ -34,6 +35,9 @@ export default function Record() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  // Asked afresh for every recording: it is a statement about *this* meeting's participants.
+  const [consent, setConsent] = useState(false)
+  const [showNotice, setShowNotice] = useState(false)
   // A recording recovered after a crash; it is saved through the normal path below.
   const [recovered, setRecovered] = useState<{ draftId: string; parts: UploadPart[] } | null>(null)
 
@@ -53,6 +57,7 @@ export default function Record() {
   async function save() {
     if (!user) return
     if (!rec.result && !file && !recovered) return
+    if (!consent) return setError(t('consent.required'))
     setBusy(true)
     setError(null)
     try {
@@ -69,7 +74,9 @@ export default function Record() {
         title: title.trim() || file?.name.replace(/\.[^.]+$/, '') || t('record.untitled'),
         language,
         notesLanguage,
+        consent: true,
       })
+      setConsent(false)
       // The recording is now in the upload queue, so the safety copy is no longer needed.
       await rec.discardDraft()
       if (recovered) await deleteDraft(recovered.draftId)
@@ -167,7 +174,36 @@ export default function Record() {
       {language === 'auto' && <p className="-mt-2 text-xs text-slate-500 dark:text-slate-400">{t('record.langHint')}</p>}
       {language === 'ta' && <p className="-mt-2 text-xs text-amber-700 dark:text-amber-400">{t('record.tamilNote')}</p>}
 
+      <section
+        aria-labelledby="consent-heading"
+        className="flex flex-col gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 dark:border-amber-700 dark:bg-amber-900/20"
+      >
+        <h3 id="consent-heading" className="text-sm font-semibold">
+          {t('consent.title')}
+        </h3>
+        <label className="flex items-start gap-3 text-sm">
+          <input
+            type="checkbox"
+            checked={consent}
+            disabled={active}
+            onChange={(e) => setConsent(e.target.checked)}
+            className="mt-0.5 h-5 w-5 shrink-0"
+          />
+          <span>{t('consent.label')}</span>
+        </label>
+        <p className="text-xs text-slate-600 dark:text-slate-300">{t('consent.help')}</p>
+        <button type="button" onClick={() => setShowNotice(true)} className="self-start py-1 text-sm font-semibold text-indigo-700 underline dark:text-indigo-300">
+          {t('consent.showNotice')}
+        </button>
+      </section>
+
       <section className="flex flex-col items-center gap-4 rounded-2xl border border-slate-200 p-6 dark:border-slate-800">
+        {active && (
+          <p role="status" className="flex items-center gap-2 text-sm font-semibold text-red-600 dark:text-red-400">
+            <span aria-hidden className="animate-pulse">●</span>
+            {t('consent.banner')}
+          </p>
+        )}
         <div className="font-mono text-4xl tabular-nums" aria-live="off">
           {formatClock(recovered ? recoveredSeconds : rec.state === 'stopped' ? (rec.result?.durationSeconds ?? 0) : rec.elapsed)}
         </div>
@@ -184,13 +220,17 @@ export default function Record() {
         </div>
 
         {!active && !hasAudio && (
-          <button
-            onClick={rec.start}
-            aria-label={t('record.start')}
-            className="h-28 w-28 rounded-full bg-red-600 text-lg font-semibold text-white shadow-lg active:scale-95"
-          >
-            {t('record.rec')}
-          </button>
+          <>
+            <button
+              onClick={rec.start}
+              disabled={!consent}
+              aria-label={t('record.start')}
+              className="h-28 w-28 rounded-full bg-red-600 text-lg font-semibold text-white shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
+            >
+              {t('record.rec')}
+            </button>
+            {!consent && <p className="text-xs text-slate-500 dark:text-slate-400">{t('consent.required')}</p>}
+          </>
         )}
 
         {active && (
@@ -240,6 +280,7 @@ export default function Record() {
             onClick={() => {
               rec.reset()
               setFile(null)
+              setConsent(false)
               void rec.discardDraft()
               if (recovered) void deleteDraft(recovered.draftId)
               setRecovered(null)
@@ -250,7 +291,7 @@ export default function Record() {
           </button>
           <button
             onClick={save}
-            disabled={busy}
+            disabled={busy || !consent}
             className="flex-1 rounded-lg bg-indigo-600 px-4 py-3 font-semibold text-white disabled:opacity-60"
           >
             {busy ? t('record.saving') : t('record.save')}
@@ -264,6 +305,12 @@ export default function Record() {
         </p>
       )}
       {notice && <p className="text-sm text-amber-700 dark:text-amber-400">{notice}</p>}
+      {showNotice && (
+        <ConsentNotice
+          initialLang={language === 'auto' ? lang : language}
+          onClose={() => setShowNotice(false)}
+        />
+      )}
     </div>
   )
 }

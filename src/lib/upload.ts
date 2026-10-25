@@ -1,8 +1,9 @@
 import { supabase } from './supabase'
 import { extensionFor } from './audio'
+import { CONSENT_VERSION } from './consent'
 import { enqueue, listPending, removePending, type PendingRecording } from './queue'
 
-export type NewRecording = Omit<PendingRecording, 'id' | 'createdAt' | 'meetingDate'>
+export type NewRecording = Omit<PendingRecording, 'id' | 'createdAt' | 'meetingDate' | 'consent'> & { consent: boolean }
 
 /** Upload every part, then create the meeting row. Safe to retry: same id, upsert uploads. */
 export async function uploadRecording(item: PendingRecording): Promise<void> {
@@ -33,6 +34,9 @@ export async function uploadRecording(item: PendingRecording): Promise<void> {
       duration_seconds: total,
       audio_path: audioParts[0]?.path ?? null,
       audio_parts: audioParts,
+      // The database stamps the time and freezes these; the app only reports whether the box was ticked.
+      consent_confirmed: item.consent === true,
+      consent_version: item.consent === true ? CONSENT_VERSION : null,
     },
     { onConflict: 'id', ignoreDuplicates: true },
   )

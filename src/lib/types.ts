@@ -21,6 +21,9 @@ export interface Meeting {
   audio_path: string | null
   audio_parts: AudioPart[]
   processed_parts: number
+  /** Set when the person recording confirmed consent; the time is stamped by the database. */
+  consent_confirmed: boolean
+  consent_confirmed_at: string | null
 }
 
 export interface MeetingNotes {

@@ -182,6 +182,26 @@ next visit to the Record page (or a hint on the dashboard) offers **Recover it**
 upload path. The safety copy is deleted once the recording is in the upload queue. At most about a second of audio is lost.
 This relies on the browser's storage (private/incognito windows may refuse it; the app then records without a safety copy).
 
+## Recording consent
+
+Recording people can be unlawful without their consent, and the rules differ by country and state (some require *everyone's* consent).
+MeetNotes helps the person recording do the right thing; it cannot make a recording lawful. **This is a reminder, not legal advice:
+take advice for your jurisdiction, and add your own policy to the Terms you publish.**
+
+- **Confirm before recording or uploading.** The Record button stays disabled, and an uploaded file cannot be saved, until the person ticks
+  *"I confirm that everyone who can be heard has been told this is being recorded and agrees to it, or that I am otherwise legally allowed
+  to record them."* It is asked afresh for every recording (never remembered) and is locked while recording.
+- **Notice for participants.** *Show notice to participants* opens a full-screen "This meeting is being recorded" message to show to the room
+  or share on screen. It has its own English / हिन्दी / தமிழ் switch (it follows the meeting's spoken language, not the app's), a *Copy text*
+  button for pasting into a chat, and the recording keeps running behind it. A red *Recording in progress* line shows while recording.
+- **Audit trail.** The meeting stores `consent_confirmed`, `consent_confirmed_at` and `consent_version` (which wording was shown; bump
+  `CONSENT_VERSION` in `src/lib/consent.ts` when the wording changes materially). The database sets the time itself and a trigger
+  freezes all three after creation, so neither the app nor a user can backdate or remove them. The meeting page shows
+  *Recording consent confirmed on …*. Meetings made before this feature have no confirmation recorded.
+- **What it is not.** It records the *recorder's own statement*, not proof that anyone else agreed; it doesn't capture participants' consent
+  individually, doesn't stop a determined user from ticking the box falsely, and can't announce the recording audibly to a call.
+  Zoom/Teams/Meet have their own recording notices; use those for remote meetings.
+
 ## Editing the transcript
 
 Speech recognition makes mistakes (especially in Tamil), so every transcript line can be corrected on the **Transcript** tab:
@@ -299,6 +319,13 @@ Automated: `npm test` and `npm run typecheck` must pass. Manual (needs a live Su
       the tab) and gets the app. Revoke them: their next request returns no data and processing is refused with 403.
 - [ ] A pending user calling `/api/process-meeting` with their own token gets 403; PATCHing their own `profiles.status`
       is rejected.
+
+**Recording consent**
+- [ ] The Record button is greyed out with "Please confirm consent first." until the box is ticked; recording then starts normally.
+- [ ] *Show notice to participants* fills the screen, switches between English, हिन्दी and தமிழ், copies its text, and Esc closes it; recording continues behind it.
+- [ ] While recording, the red *Recording in progress* line shows and the checkbox is locked. After saving or discarding, the box is unticked again.
+- [ ] Uploading a file: *Save meeting* stays disabled until the box is ticked. The saved meeting shows *Recording consent confirmed on <date>*.
+- [ ] A recording made offline and uploaded later still shows the confirmation date.
 
 **Transcript editing**
 - [ ] Edit a line (✎): it shows *edited*; reload the page and the edit is still there. Reopen the editor: *Original: …* shows Whisper's text.

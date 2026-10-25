@@ -252,6 +252,11 @@ export default function MeetingDetail() {
           {meeting.duration_seconds != null &&
             ` · ${t('common.minutes', { n: Math.max(1, Math.round(meeting.duration_seconds / 60)) })}`}
         </p>
+        {meeting.consent_confirmed_at && (
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            {t('consent.confirmedOn', { date: new Date(meeting.consent_confirmed_at).toLocaleDateString(lang) })}
+          </p>
+        )}
       </div>
 
       {flash && (

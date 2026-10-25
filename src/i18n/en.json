@@ -221,5 +221,19 @@
   "notesStale.update": "Update notes from transcript",
   "notesStale.confirm": "Replace the summary, decisions and action items with new ones written from the edited transcript? Your changes to them (including ticked action items) will be lost.",
   "notesStale.updating": "Updating notes…",
-  "notesStale.progress": "Updating notes… {done}/{total}"
+  "notesStale.progress": "Updating notes… {done}/{total}",
+
+  "consent.title": "Recording consent",
+  "consent.label": "I confirm that everyone who can be heard has been told this is being recorded and agrees to it, or that I am otherwise legally allowed to record them.",
+  "consent.help": "Recording rules differ by country and state: some places require everyone’s consent. This is a reminder, not legal advice.",
+  "consent.required": "Please confirm consent first.",
+  "consent.showNotice": "Show notice to participants",
+  "consent.banner": "Recording in progress",
+  "consent.noticeTitle": "This meeting is being recorded",
+  "consent.notice": "This meeting is being audio-recorded and turned into a written transcript and notes by MeetNotes. If you do not agree to be recorded, please tell the organiser now.",
+  "consent.language": "Notice language",
+  "consent.copy": "Copy text",
+  "consent.copied": "Copied",
+  "consent.close": "Close",
+  "consent.confirmedOn": "Recording consent confirmed on {date}"
 }
