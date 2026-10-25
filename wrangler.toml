@@ -1,0 +1,13 @@
+name = "meetnotes"
+compatibility_date = "2026-10-01"
+pages_build_output_dir = "dist"
+
+# Workers AI binding, available in Functions as `env.AI`
+[ai]
+binding = "AI"
+
+# Non-secret config. Secrets (SUPABASE_SERVICE_ROLE_KEY) go in .dev.vars locally
+# and in the Pages dashboard / `wrangler pages secret put` in production.
+[vars]
+MAX_MEETINGS_PER_DAY = "10"
+MAX_RECORDING_MINUTES = "90"
