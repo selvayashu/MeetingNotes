@@ -78,7 +78,7 @@ Useful scripts: `npm test` (unit + component tests), `npm run typecheck` (Functi
    a `VITE_*` variable, or the repo.
 6. Check **Storage**: a private bucket named `recordings` should exist.
 
-Migrations (`supabase/migrations/`): schema → RLS → storage policies → audio parts and processing state.
+Migrations (`supabase/migrations/`): schema → RLS → storage policies → audio parts and processing state → admin approval.
 Users can only change their own meetings' title, date and languages; processing columns are service-role only.
 
 ## 3. Deploy to Cloudflare Pages
@@ -107,6 +107,32 @@ Users can only change their own meetings' title, date and languages; processing 
 - The Workers free plan has tight CPU (10 ms) and subrequest (50) limits per request. Base64-encoding
   audio and a multi-part call can exceed them. **If you see CPU or subrequest errors in production, the
   Workers Paid plan ($5/month) is the fix.** This has not been verified on a deployed project yet.
+
+## Admin approval
+
+New sign-ups can log in but land on a **"Waiting for approval"** screen and can use nothing until an admin approves
+them. Approval is enforced in the database (restrictive RLS on every table and on the `recordings` bucket) and again
+in `/api/process-meeting`, so hiding a button is not the only protection.
+
+- **First admin:** emails in the `admin_emails` table become approved admins automatically when they sign up. Add
+  yours before signing in for the first time (accounts that already exist when the migration runs are approved):
+  ```sql
+  insert into public.admin_emails values ('you@example.com');
+  -- or, if you already have an account:
+  update public.profiles set is_admin = true, status = 'approved'
+   where id = (select id from auth.users where email = 'you@example.com');
+  ```
+  Run it with `npx supabase db query --linked "<sql>"` or in the dashboard's SQL editor.
+- **Approving users:** admins get an **Admin** link in the header. It lists users as *Waiting for approval*,
+  *Approved* and *Rejected*, with Approve / Reject / Revoke access buttons. Admin accounts can't be changed from the
+  page, and an admin can't change their own status.
+- **Making someone else an admin:** `update public.profiles set is_admin = true where id = '<user id>'` (deliberately
+  not available in the UI).
+- Rejecting or revoking takes effect immediately for data access. The user's open tab will notice the next time it
+  loads their profile.
+- There is **no e-mail notification** when someone signs up; check the Admin page.
+- Supabase's built-in e-mail sender is heavily rate-limited, which affects sign-in codes. Configure your own SMTP
+  (Auth → SMTP Settings) before inviting many people.
 
 ## 4. Configuration reference
 
@@ -175,6 +201,13 @@ Automated: `npm test` and `npm run typecheck` must pass. Manual (needs a live Su
       with no duplicated transcript lines.
 - [ ] Close the tab mid-processing, reopen: the meeting shows **Resume** and completes.
 - [ ] Exceed `MAX_MEETINGS_PER_DAY`: the extra meeting is refused with a clear message and isn't marked failed.
+
+**Admin approval**
+- [ ] A brand-new e-mail signs in and sees "Waiting for approval", with no Record/Meetings screens and no Admin link.
+- [ ] The admin sees them under *Waiting for approval* and approves; the new user presses **Check again** (or returns to
+      the tab) and gets the app. Revoke them: their next request returns no data and processing is refused with 403.
+- [ ] A pending user calling `/api/process-meeting` with their own token gets 403; PATCHing their own `profiles.status`
+      is rejected.
 
 **Notes and sharing**
 - [ ] Edit the title, summary and action items (tick, edit, add, delete); reload and the changes persist.

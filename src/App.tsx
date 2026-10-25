@@ -2,12 +2,15 @@ import { useEffect, useState } from 'react'
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
 import ErrorBoundary from './components/ErrorBoundary'
 import { AuthProvider, useAuth } from './hooks/useAuth'
+import { useProfile } from './hooks/useProfile'
 import { useI18n } from './i18n/context'
 import { isUiLang } from './i18n/translate'
 import { isSupabaseConfigured, supabase } from './lib/supabase'
+import Admin from './pages/Admin'
 import Dashboard from './pages/Dashboard'
 import Login from './pages/Login'
 import MeetingDetail from './pages/MeetingDetail'
+import PendingApproval from './pages/PendingApproval'
 import Record from './pages/Record'
 import Settings from './pages/Settings'
 import { applyTheme, readTheme } from './theme'
@@ -53,10 +56,16 @@ function Shell() {
   const { user, loading } = useAuth()
   const { t } = useI18n()
   const online = useOnline()
+  const { profile, loading: profileLoading, error: profileError, refresh } = useProfile(user?.id)
   useAdoptProfileLanguage(user?.id)
 
-  if (loading) return <p className="p-6 text-slate-500 dark:text-slate-400">{t('common.loading')}</p>
+  if (loading || (user && profileLoading)) return <p className="p-6 text-slate-500 dark:text-slate-400">{t('common.loading')}</p>
   if (!user) return <Login />
+  if (profileError) return <p role="alert" className="p-6 text-red-600 dark:text-red-400">{profileError}</p>
+  // Not approved yet (or rejected): nothing else in the app is reachable.
+  if (profile?.status !== 'approved') {
+    return <PendingApproval status={profile?.status === 'rejected' ? 'rejected' : 'pending'} refresh={refresh} />
+  }
 
   return (
     <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-4 px-4 pb-24 pt-[max(1.5rem,env(safe-area-inset-top))]">
@@ -64,9 +73,10 @@ function Shell() {
         <Link to="/" className="text-2xl font-bold">
           MeetNotes
         </Link>
-        <Link to="/settings" className="text-sm text-slate-500 dark:text-slate-400 underline">
-          {t('nav.settings')}
-        </Link>
+        <nav className="flex items-center gap-4 text-sm text-slate-500 underline dark:text-slate-400">
+          {profile.is_admin && <Link to="/admin">{t('nav.admin')}</Link>}
+          <Link to="/settings">{t('nav.settings')}</Link>
+        </nav>
       </header>
       {!online && (
         <p role="status" className="rounded-lg bg-amber-100 p-3 text-sm text-amber-900 dark:bg-amber-900/40 dark:text-amber-100">
@@ -78,6 +88,7 @@ function Shell() {
         <Route path="/record" element={<Record />} />
         <Route path="/meeting/:id" element={<MeetingDetail />} />
         <Route path="/settings" element={<Settings />} />
+        {profile.is_admin && <Route path="/admin" element={<Admin />} />}
       </Routes>
     </main>
   )

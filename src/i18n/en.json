@@ -148,5 +148,25 @@
 
   "theme.system": "Match device",
   "theme.light": "Light",
-  "theme.dark": "Dark"
+  "theme.dark": "Dark",
+
+  "login.approvalNote": "New accounts must be approved by an administrator before they can be used.",
+  "approval.pendingTitle": "Waiting for approval",
+  "approval.pendingBody": "Your account ({email}) has been created. An administrator needs to approve it before you can use MeetNotes. You can use the app as soon as you are approved.",
+  "approval.check": "Check again",
+  "approval.checking": "Checking…",
+  "approval.rejectedTitle": "Access not granted",
+  "approval.rejectedBody": "An administrator has not approved this account. Contact them if you think this is a mistake.",
+  "nav.admin": "Admin",
+  "admin.title": "User approvals",
+  "admin.pending": "Waiting for approval",
+  "admin.approved": "Approved users",
+  "admin.rejected": "Rejected",
+  "admin.none": "No users here.",
+  "admin.approve": "Approve",
+  "admin.reject": "Reject",
+  "admin.revoke": "Revoke access",
+  "admin.joined": "Joined {date}",
+  "admin.adminBadge": "Admin",
+  "admin.error": "Could not update the user."
 }

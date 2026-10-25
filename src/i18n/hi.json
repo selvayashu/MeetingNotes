@@ -148,5 +148,25 @@
 
   "theme.system": "डिवाइस के अनुसार",
   "theme.light": "हल्का",
-  "theme.dark": "गहरा"
+  "theme.dark": "गहरा",
+
+  "login.approvalNote": "नए खातों को इस्तेमाल से पहले एडमिन की स्वीकृति चाहिए।",
+  "approval.pendingTitle": "स्वीकृति की प्रतीक्षा",
+  "approval.pendingBody": "आपका खाता ({email}) बन गया है। MeetNotes इस्तेमाल करने से पहले किसी एडमिन को इसे स्वीकृत करना होगा। स्वीकृति मिलते ही आप ऐप इस्तेमाल कर सकेंगे।",
+  "approval.check": "फिर जाँचें",
+  "approval.checking": "जाँच हो रही है…",
+  "approval.rejectedTitle": "पहुँच नहीं दी गई",
+  "approval.rejectedBody": "एडमिन ने इस खाते को स्वीकृत नहीं किया है। अगर आपको लगता है कि यह गलती है, तो उनसे संपर्क करें।",
+  "nav.admin": "एडमिन",
+  "admin.title": "उपयोगकर्ता स्वीकृति",
+  "admin.pending": "स्वीकृति की प्रतीक्षा में",
+  "admin.approved": "स्वीकृत उपयोगकर्ता",
+  "admin.rejected": "अस्वीकृत",
+  "admin.none": "यहाँ कोई उपयोगकर्ता नहीं है।",
+  "admin.approve": "स्वीकृत करें",
+  "admin.reject": "अस्वीकार करें",
+  "admin.revoke": "पहुँच हटाएँ",
+  "admin.joined": "जुड़े: {date}",
+  "admin.adminBadge": "एडमिन",
+  "admin.error": "उपयोगकर्ता को अपडेट नहीं किया जा सका।"
 }

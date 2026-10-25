@@ -68,6 +68,7 @@ export default function Login() {
         </select>
       </div>
       <p className="text-slate-500 dark:text-slate-400">{t('login.subtitle')}</p>
+      <p className="rounded-lg bg-slate-100 p-3 text-sm dark:bg-slate-900">{t('login.approvalNote')}</p>
 
       {step === 'email' ? (
         <form onSubmit={sendCode} className="flex flex-col gap-3">

@@ -72,6 +72,10 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       auth: { persistSession: false },
     })
 
+    // The service role bypasses RLS, so enforce admin approval here too (first, before any work).
+    const { data: profile } = await db.from('profiles').select('status').eq('id', userId).maybeSingle()
+    if (profile?.status !== 'approved') throw new HttpError(403, 'Your account is not approved yet.')
+
     const { data: m } = await db.from('meetings').select('*').eq('id', meetingId).maybeSingle()
     // Same response for "missing" and "not yours" so ids can't be probed.
     if (!m || m.user_id !== userId) throw new HttpError(404, 'Meeting not found')
