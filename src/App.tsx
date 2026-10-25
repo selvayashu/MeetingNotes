@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './hooks/useAuth'
 import { isSupabaseConfigured } from './lib/supabase'
 import Dashboard from './pages/Dashboard'
 import Login from './pages/Login'
+import MeetingDetail from './pages/MeetingDetail'
 import Record from './pages/Record'
 
 function Shell() {
@@ -24,6 +25,7 @@ function Shell() {
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/record" element={<Record />} />
+        <Route path="/meeting/:id" element={<MeetingDetail />} />
       </Routes>
     </main>
   )

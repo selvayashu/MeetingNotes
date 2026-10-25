@@ -75,6 +75,20 @@ export default function Dashboard() {
 
   const { pending } = useQueueSync(user?.id, load)
 
+  const [query, setQuery] = useState('')
+  const [langFilter, setLangFilter] = useState('')
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
+  const filtered = meetings?.filter((m) => {
+    if (query.trim() && !m.title.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())) return false
+    if (langFilter && m.language !== langFilter) return false
+    const day = m.meeting_date.slice(0, 10)
+    if (from && day < from) return false
+    if (to && day > to) return false
+    return true
+  })
+  const filtering = Boolean(query || langFilter || from || to)
+
   return (
     <div className="flex flex-col gap-4">
       <h2 className="text-xl font-semibold">Meetings</h2>
@@ -84,9 +98,51 @@ export default function Dashboard() {
         </p>
       )}
       {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+      <div className="flex flex-col gap-2">
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search meetings"
+          aria-label="Search meetings"
+          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900"
+        />
+        <div className="flex flex-wrap gap-2 text-sm">
+          <select
+            value={langFilter}
+            onChange={(e) => setLangFilter(e.target.value)}
+            aria-label="Filter by language"
+            className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-900"
+          >
+            <option value="">All languages</option>
+            <option value="en">English</option>
+            <option value="hi">Hindi</option>
+            <option value="ta">Tamil</option>
+            <option value="auto">Auto-detect</option>
+          </select>
+          <input type="date" value={from} max={to || undefined} onChange={(e) => setFrom(e.target.value)} aria-label="From date" className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-900" />
+          <input type="date" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} aria-label="To date" className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-900" />
+          {filtering && (
+            <button
+              onClick={() => {
+                setQuery('')
+                setLangFilter('')
+                setFrom('')
+                setTo('')
+              }}
+              className="text-indigo-600 underline"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      </div>
       {meetings?.length === 0 && <p className="text-slate-500">No meetings yet. Tap Record to start.</p>}
+      {meetings && meetings.length > 0 && filtered?.length === 0 && (
+        <p className="text-slate-500">No meetings match your filters.</p>
+      )}
       <ul className="flex flex-col gap-2">
-        {meetings?.map((m) => {
+        {filtered?.map((m) => {
           const prog = running[m.id]
           const total = prog?.total || m.audio_parts.length
           const processed = prog?.processed ?? m.processed_parts
@@ -98,7 +154,9 @@ export default function Dashboard() {
               m.status === 'summarising')
           return (
             <li key={m.id} className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
-              <div className="font-medium">{m.title}</div>
+              <Link to={`/meeting/${m.id}`} className="block font-medium">
+                {m.title}
+              </Link>
               <div className="flex gap-2 text-xs text-slate-500">
                 <span>{new Date(m.meeting_date).toLocaleDateString()}</span>
                 <span>{m.language}</span>
