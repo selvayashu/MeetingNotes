@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from 'react'
 import { useI18n } from '../i18n/context'
-import { UI_LANGS, type UiLang } from '../i18n/translate'
+import { UI_LANGS, type TKey, type UiLang } from '../i18n/translate'
+import { authErrorKey, isLinkError } from '../lib/authErrors'
+import { isStrongEnough } from '../lib/password'
 import { supabase } from '../lib/supabase'
 
-type Step = 'email' | 'code'
+type Mode = 'signin' | 'signup' | 'forgot'
 
 const inputCls =
   'w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-base dark:border-slate-700 dark:bg-slate-900'
@@ -12,46 +14,84 @@ const btnCls =
 
 export default function Login() {
   const { t, lang, setLang } = useI18n()
-  const [step, setStep] = useState<Step>('email')
+  // A dead password-reset link lands here with an error in the URL: send the user straight to "forgot".
+  const linkBroken = typeof window !== 'undefined' && isLinkError(window.location.hash + window.location.search)
+  const [mode, setMode] = useState<Mode>(linkBroken ? 'forgot' : 'signin')
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
-  const [code, setCode] = useState('')
+  const [password, setPassword] = useState('')
+  const [show, setShow] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<TKey | null>(linkBroken ? 'login.linkExpired' : null)
+  const [notice, setNotice] = useState<TKey | null>(null)
 
-  async function sendCode(e: FormEvent) {
+  function switchMode(next: Mode) {
+    setMode(next)
+    setError(null)
+    setNotice(null)
+  }
+
+  async function submit(e: FormEvent) {
     e.preventDefault()
-    setBusy(true)
     setError(null)
-    // Sends both a 6-digit code and a magic link; the code works on installed PWAs too.
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: window.location.origin },
-    })
-    setBusy(false)
-    if (error) setError(error.message)
-    else setStep('code')
+    setNotice(null)
+    const addr = email.trim()
+
+    if (mode === 'signup') {
+      if (!name.trim()) return setError('login.nameRequired')
+      if (!isStrongEnough(password)) return setError('password.rules')
+    }
+
+    setBusy(true)
+    try {
+      if (mode === 'signin') {
+        const { error } = await supabase.auth.signInWithPassword({ email: addr, password })
+        if (error) setError(authErrorKey(error))
+        // On success the auth listener swaps this screen out; approval is checked by the app shell.
+      } else if (mode === 'signup') {
+        const { data, error } = await supabase.auth.signUp({
+          email: addr,
+          password,
+          options: { data: { full_name: name.trim() }, emailRedirectTo: window.location.origin },
+        })
+        if (error) setError(authErrorKey(error))
+        else if (!data.session) {
+          // Only happens if the project requires e-mail confirmation.
+          setNotice('login.checkEmailConfirm')
+          setMode('signin')
+        }
+        // With a session, the shell shows the "waiting for approval" screen.
+      } else {
+        const { error } = await supabase.auth.resetPasswordForEmail(addr, { redirectTo: window.location.origin })
+        // Same message whether or not the account exists, so the form can't be used to probe for emails.
+        if (error && authErrorKey(error) === 'login.rateLimited') setError('login.rateLimited')
+        else setNotice('login.resetSent')
+      }
+    } catch {
+      setError('login.genericError')
+    } finally {
+      setBusy(false)
+    }
   }
 
-  async function verifyCode(e: FormEvent) {
-    e.preventDefault()
-    setBusy(true)
-    setError(null)
-    const { error } = await supabase.auth.verifyOtp({ email, token: code.trim(), type: 'email' })
-    setBusy(false)
-    if (error) setError(error.message)
-  }
-
-  async function google() {
-    setError(null)
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.origin },
-    })
-    if (error) setError(error.message)
-  }
+  const tab = (m: 'signin' | 'signup', label: TKey) => (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={mode === m}
+      onClick={() => switchMode(m)}
+      className={`flex-1 border-b-2 px-2 py-3 text-sm font-semibold ${
+        mode === m
+          ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
+          : 'border-transparent text-slate-500 dark:text-slate-400'
+      }`}
+    >
+      {t(label)}
+    </button>
+  )
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-5 px-4">
+    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-5 px-4 py-8">
       <div className="flex items-start justify-between">
         <h1 className="text-3xl font-bold">MeetNotes</h1>
         <select
@@ -68,58 +108,94 @@ export default function Login() {
         </select>
       </div>
       <p className="text-slate-500 dark:text-slate-400">{t('login.subtitle')}</p>
-      <p className="rounded-lg bg-slate-100 p-3 text-sm dark:bg-slate-900">{t('login.approvalNote')}</p>
 
-      {step === 'email' ? (
-        <form onSubmit={sendCode} className="flex flex-col gap-3">
-          <input
-            type="email"
-            required
-            autoComplete="email"
-            placeholder="you@example.com"
-            aria-label="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className={inputCls}
-          />
-          <button disabled={busy} className={btnCls}>
-            {busy ? t('login.sending') : t('login.sendCode')}
-          </button>
-        </form>
+      {mode !== 'forgot' ? (
+        <div role="tablist" className="flex border-b border-slate-200 dark:border-slate-800">
+          {tab('signin', 'login.tabSignIn')}
+          {tab('signup', 'login.signUp')}
+        </div>
       ) : (
-        <form onSubmit={verifyCode} className="flex flex-col gap-3">
-          <p className="text-sm">{t('login.sentTo', { email })}</p>
-          <input
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            required
-            placeholder="123456"
-            aria-label="Code"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            className={inputCls + ' text-center tracking-widest'}
-          />
-          <button disabled={busy} className={btnCls}>
-            {busy ? t('login.verifying') : t('login.verify')}
-          </button>
-          <button type="button" onClick={() => setStep('email')} className="text-sm text-slate-500 dark:text-slate-400 underline">
-            {t('login.otherEmail')}
-          </button>
-        </form>
+        <div>
+          <h2 className="text-lg font-semibold">{t('login.resetTitle')}</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{t('login.resetHelp')}</p>
+        </div>
       )}
 
-      <div className="flex items-center gap-3 text-xs text-slate-400">
-        <hr className="flex-1 border-slate-200 dark:border-slate-800" /> {t('login.or')}{' '}
-        <hr className="flex-1 border-slate-200 dark:border-slate-800" />
-      </div>
-      <button
-        onClick={google}
-        className="w-full rounded-lg border border-slate-300 px-4 py-3 font-semibold dark:border-slate-700"
-      >
-        {t('login.google')}
-      </button>
+      <form onSubmit={submit} className="flex flex-col gap-3">
+        {mode === 'signup' && (
+          <input
+            type="text"
+            required
+            maxLength={100}
+            autoComplete="name"
+            placeholder={t('login.name')}
+            aria-label={t('login.name')}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className={inputCls}
+          />
+        )}
+        <input
+          type="email"
+          required
+          autoComplete={mode === 'signin' ? 'username' : 'email'}
+          placeholder={t('login.email')}
+          aria-label={t('login.email')}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className={inputCls}
+        />
+        {mode !== 'forgot' && (
+          <>
+            <input
+              type={show ? 'text' : 'password'}
+              required
+              autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+              placeholder={t('login.password')}
+              aria-label={t('login.password')}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className={inputCls}
+            />
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={show} onChange={(e) => setShow(e.target.checked)} className="h-4 w-4" />
+              {t('login.showPassword')}
+            </label>
+          </>
+        )}
+        {mode === 'signup' && <p className="text-xs text-slate-500 dark:text-slate-400">{t('password.rules')}</p>}
 
-      {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+        <button disabled={busy} className={btnCls}>
+          {mode === 'signin' && (busy ? t('login.signingIn') : t('login.signIn'))}
+          {mode === 'signup' && (busy ? t('login.signingUp') : t('login.signUp'))}
+          {mode === 'forgot' && (busy ? t('login.sending') : t('login.sendLink'))}
+        </button>
+      </form>
+
+      {mode === 'signup' && (
+        <p className="rounded-lg bg-slate-100 p-3 text-sm dark:bg-slate-900">{t('login.approvalNote')}</p>
+      )}
+      {mode === 'signin' && (
+        <button type="button" onClick={() => switchMode('forgot')} className="self-start py-1 text-sm text-indigo-600 underline dark:text-indigo-400">
+          {t('login.forgot')}
+        </button>
+      )}
+      {mode === 'forgot' && (
+        <button type="button" onClick={() => switchMode('signin')} className="self-start py-1 text-sm text-indigo-600 underline dark:text-indigo-400">
+          {t('login.backToSignIn')}
+        </button>
+      )}
+
+      {notice && (
+        <p role="status" className="rounded-lg bg-emerald-100 p-3 text-sm text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-100">
+          {t(notice)}
+        </p>
+      )}
+      {error && (
+        <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+          {t(error)}
+        </p>
+      )}
     </main>
   )
 }

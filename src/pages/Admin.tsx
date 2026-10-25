@@ -76,7 +76,8 @@ export default function Admin() {
                   {rows.map((u) => (
                     <li key={u.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-slate-200 p-3 dark:border-slate-800">
                       <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium">
+                        {u.full_name && <p className="truncate font-medium">{u.full_name}</p>}
+                        <p className={`truncate ${u.full_name ? 'text-sm text-slate-600 dark:text-slate-300' : 'font-medium'}`}>
                           {u.email}
                           {u.is_admin && (
                             <span className="ml-2 rounded bg-indigo-100 px-1.5 py-0.5 text-xs text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200">

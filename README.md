@@ -69,10 +69,13 @@ Useful scripts: `npm test` (unit + component tests), `npm run typecheck` (Functi
    npx supabase db push
    ```
    Prefer the local stack? Install Docker, then `npx supabase start` and `npx supabase db reset`.
-3. **Auth → Providers:** Email is on by default (the app uses a 6-digit code; the magic link in the same
-   email also works). Optional: enable **Google** and add your OAuth client ID/secret.
-4. **Auth → URL Configuration:** set the Site URL to your deployed URL and add
-   `http://localhost:5173`, `http://localhost:8788` and the Pages URL to **Redirect URLs**.
+3. **Auth settings** are declared in `supabase/config.toml` and applied with `npx supabase config push`: e-mail +
+   password sign-in, **e-mail confirmation off** (no code is e-mailed at sign-up; the admin approves instead),
+   passwords of at least 8 characters with letters and digits, the Site URL and the Redirect URLs. Run
+   `npx supabase config diff` first: it must show only what you intend, because the file also declares defaults that
+   may differ from your project. Change the URLs in the file to your own domain.
+4. **Auth → URL Configuration** (what the file sets): Site URL = your deployed URL; Redirect URLs =
+   `http://localhost:5173`, `http://localhost:8788`, the Pages URL and `<Pages URL>/**`.
 5. **Project Settings → API:** copy the URL and `anon` key into `.env.local`, and the URL and
    `service_role` key into `.dev.vars`. The service role key bypasses RLS: never put it in `.env.local`,
    a `VITE_*` variable, or the repo.
@@ -108,6 +111,24 @@ Users can only change their own meetings' title, date and languages; processing 
   audio and a multi-part call can exceed them. **If you see CPU or subrequest errors in production, the
   Workers Paid plan ($5/month) is the fix.** This has not been verified on a deployed project yet.
 
+## Accounts, sign-in and password reset
+
+- **Sign up** needs only a **name, e-mail and password** (the e-mail is the username). No e-mail is sent and no code
+  is needed, because e-mail confirmation is switched off. The account is created as *pending*.
+- **Sign in** is e-mail + password. A new or rejected user is let in but sees only the waiting/refused screen.
+- **Forgot password:** the sign-in page's *Forgot password?* sends a reset link by e-mail; opening it shows
+  *Choose a new password*. The answer is identical whether or not the account exists. Signed-in users can also change
+  their password under **Settings**. Links are single-use and expire.
+- **Password rule:** at least 8 characters including a letter and a digit, enforced by Supabase (`config.toml`) and
+  mirrored in the forms (`src/lib/password.ts`).
+- **Trade-off, deliberately chosen:** because the e-mail is not verified at sign-up, anyone can register *with any
+  address*. The admin approval step is what stops that from mattering. Check that the address and name are who you
+  expect before approving.
+- The only e-mail the app sends is the password-reset link. Supabase's built-in sender is limited to a few e-mails an
+  hour, so configure your own SMTP (Auth → SMTP Settings) before relying on resets.
+- The first admin has no password if they signed up before password sign-in existed: use *Forgot password?*, or in the
+  Supabase dashboard (Authentication → Users) send a recovery e-mail or set one.
+
 ## Admin approval
 
 New sign-ups can log in but land on a **"Waiting for approval"** screen and can use nothing until an admin approves
@@ -131,8 +152,6 @@ in `/api/process-meeting`, so hiding a button is not the only protection.
 - Rejecting or revoking takes effect immediately for data access. The user's open tab will notice the next time it
   loads their profile.
 - There is **no e-mail notification** when someone signs up; check the Admin page.
-- Supabase's built-in e-mail sender is heavily rate-limited, which affects sign-in codes. Configure your own SMTP
-  (Auth → SMTP Settings) before inviting many people.
 
 ## 4. Configuration reference
 
@@ -202,8 +221,17 @@ Automated: `npm test` and `npm run typecheck` must pass. Manual (needs a live Su
 - [ ] Close the tab mid-processing, reopen: the meeting shows **Resume** and completes.
 - [ ] Exceed `MAX_MEETINGS_PER_DAY`: the extra meeting is refused with a clear message and isn't marked failed.
 
+**Accounts and password reset**
+- [ ] Create an account with name, e-mail and password: you are signed straight in (no e-mail step) and see "Waiting for approval".
+- [ ] A weak password (short, letters only, digits only) is refused with a clear message; the same e-mail can't register twice.
+- [ ] Wrong password and unknown e-mail show the same "Incorrect email or password."
+- [ ] *Forgot password?* with a real address: the e-mail arrives, the link opens *Choose a new password*, the new password
+      works and the old one doesn't. Opening the same link a second time shows the "expired" message and the reset form.
+- [ ] *Forgot password?* with an unknown address shows the same confirmation (no hint whether it exists).
+- [ ] Settings → Change password works. Switch the language to हिन्दी and தமிழ் on these screens.
+
 **Admin approval**
-- [ ] A brand-new e-mail signs in and sees "Waiting for approval", with no Record/Meetings screens and no Admin link.
+- [ ] A brand-new account signs in and sees "Waiting for approval", with no Record/Meetings screens and no Admin link.
 - [ ] The admin sees them under *Waiting for approval* and approves; the new user presses **Check again** (or returns to
       the tab) and gets the app. Revoke them: their next request returns no data and processing is refused with 403.
 - [ ] A pending user calling `/api/process-meeting` with their own token gets 403; PATCHing their own `profiles.status`

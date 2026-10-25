@@ -32,7 +32,7 @@ describe('dictionaries', () => {
 
 describe('translate', () => {
   it('fills placeholders', () => {
-    expect(translate('en', 'login.sentTo', { email: 'a@b.co' })).toContain('a@b.co')
+    expect(translate('en', 'approval.pendingBody', { email: 'a@b.co' })).toContain('a@b.co')
     expect(translate('ta', 'detail.progressSummarising', { done: 2, total: 5 })).toContain('2/5')
   })
   it('leaves unknown placeholders visible rather than crashing', () => {

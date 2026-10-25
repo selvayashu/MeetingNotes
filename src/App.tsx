@@ -11,6 +11,7 @@ import Dashboard from './pages/Dashboard'
 import Login from './pages/Login'
 import MeetingDetail from './pages/MeetingDetail'
 import PendingApproval from './pages/PendingApproval'
+import ResetPassword from './pages/ResetPassword'
 import Record from './pages/Record'
 import Settings from './pages/Settings'
 import { applyTheme, readTheme } from './theme'
@@ -53,7 +54,7 @@ function useAdoptProfileLanguage(userId: string | undefined) {
 }
 
 function Shell() {
-  const { user, loading } = useAuth()
+  const { user, loading, recovery } = useAuth()
   const { t } = useI18n()
   const online = useOnline()
   const { profile, loading: profileLoading, error: profileError, refresh } = useProfile(user?.id)
@@ -61,6 +62,8 @@ function Shell() {
 
   if (loading || (user && profileLoading)) return <p className="p-6 text-slate-500 dark:text-slate-400">{t('common.loading')}</p>
   if (!user) return <Login />
+  // Opened from a "reset password" e-mail: choosing a new password comes before anything else.
+  if (recovery) return <ResetPassword />
   if (profileError) return <p role="alert" className="p-6 text-red-600 dark:text-red-400">{profileError}</p>
   // Not approved yet (or rejected): nothing else in the app is reachable.
   if (profile?.status !== 'approved') {

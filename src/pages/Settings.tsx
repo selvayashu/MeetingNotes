@@ -1,12 +1,54 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useI18n } from '../i18n/context'
-import { UI_LANGS, type UiLang } from '../i18n/translate'
+import { UI_LANGS, type TKey, type UiLang } from '../i18n/translate'
+import { authErrorKey } from '../lib/authErrors'
+import { isStrongEnough } from '../lib/password'
 import { supabase } from '../lib/supabase'
 import { useTheme, type ThemePref } from '../theme'
 
 const THEMES: ThemePref[] = ['system', 'light', 'dark']
+
+function ChangePassword() {
+  const { t } = useI18n()
+  const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState<{ key: TKey; error: boolean } | null>(null)
+
+  async function submit(e: FormEvent) {
+    e.preventDefault()
+    if (!isStrongEnough(password)) return setMsg({ key: 'password.rules', error: true })
+    if (password !== confirm) return setMsg({ key: 'password.mismatch', error: true })
+    setBusy(true)
+    const { error } = await supabase.auth.updateUser({ password })
+    setBusy(false)
+    if (error) return setMsg({ key: authErrorKey(error), error: true })
+    setPassword('')
+    setConfirm('')
+    setMsg({ key: 'settings.passwordChanged', error: false })
+  }
+
+  const box = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900'
+  return (
+    <form onSubmit={submit} className="flex flex-col gap-2 border-t border-slate-200 pt-4 dark:border-slate-800">
+      <h3 className="font-medium">{t('settings.changePassword')}</h3>
+      <input type="password" required autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)}
+        placeholder={t('resetpw.new')} aria-label={t('resetpw.new')} className={box} />
+      <input type="password" required autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)}
+        placeholder={t('resetpw.confirm')} aria-label={t('resetpw.confirm')} className={box} />
+      <button disabled={busy} className="self-start rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white disabled:opacity-60">
+        {busy ? t('common.saving') : t('settings.changePassword')}
+      </button>
+      {msg && (
+        <p role={msg.error ? 'alert' : 'status'} className={`text-sm ${msg.error ? 'text-red-600 dark:text-red-400' : 'text-emerald-700 dark:text-emerald-400'}`}>
+          {t(msg.key)}
+        </p>
+      )}
+    </form>
+  )
+}
 
 export default function Settings() {
   const { t, lang, setLang } = useI18n()
@@ -102,6 +144,8 @@ export default function Settings() {
           {msg.text}
         </p>
       )}
+
+      <ChangePassword />
 
       <div className="flex items-center justify-between gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
         <p className="min-w-0 truncate text-sm text-slate-500 dark:text-slate-400">
