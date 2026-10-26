@@ -182,6 +182,23 @@ next visit to the Record page (or a hint on the dashboard) offers **Recover it**
 upload path. The safety copy is deleted once the recording is in the upload queue. At most about a second of audio is lost.
 This relies on the browser's storage (private/incognito windows may refuse it; the app then records without a safety copy).
 
+## AI usage and the daily cap
+
+Workers AI bills in **neurons**. The free plan includes **10,000 per day for the whole Cloudflare account** (resetting at 00:00 UTC), and
+anything beyond that is charged ($0.011 per 1,000). Every AI call made while processing is recorded in `ai_usage` (neurons as reported by
+Cloudflare; estimated, and flagged as such, only when a response doesn't include them), with the audio length, token counts, user and meeting.
+
+- **Admin → Usage and AI limit** (`/admin/usage`): today against the cap with a plain state (*Running normally / Close to the cap / Paused*), the
+  free allowance, an estimated charge if you are past it, a daily chart with the cap drawn as a line (and a table view), the heaviest users, and
+  7/14/30-day views.
+- **Daily cap** (default **8,000**, leaving headroom for anything else on the account; **0 turns it off**). Once today's total reaches it, new
+  processing pauses for everyone until 00:00 UTC: a manual start gets a clear message (HTTP 503), the meeting is **not** marked failed, and the
+  background scheduler starts nothing. Processing resumes by itself the next UTC day. Change the cap on the same page.
+- It is a **soft** cap: calls already in flight can finish, so the day can end slightly above it. The usage counts only this app; other uses of the same
+  Cloudflare account (for example the benchmark script) share the 10,000 allowance but are not in these numbers.
+- Only admins can read usage (admin-only functions; the table itself is closed to users). If the cap check can't be read, processing carries on rather
+  than stopping everything.
+
 ## Recording consent
 
 Recording people can be unlawful without their consent, and the rules differ by country and state (some require *everyone's* consent).
@@ -319,6 +336,11 @@ Automated: `npm test` and `npm run typecheck` must pass. Manual (needs a live Su
       the tab) and gets the app. Revoke them: their next request returns no data and processing is refused with 403.
 - [ ] A pending user calling `/api/process-meeting` with their own token gets 403; PATCHing their own `profiles.status`
       is rejected.
+
+**AI usage and cap**
+- [ ] Admin → *Usage and AI limit* shows today's units after you process a meeting; the chart and the table view agree.
+- [ ] Set the cap to a tiny number: starting a new meeting says the daily limit is reached, the meeting stays *Uploaded* (not *Failed*), and the page shows *Paused*. Restore the cap and processing continues.
+- [ ] A non-admin cannot open `/admin/usage`.
 
 **Recording consent**
 - [ ] The Record button is greyed out with "Please confirm consent first." until the box is ticked; recording then starts normally.
