@@ -10,6 +10,7 @@ import { isSupabaseConfigured, supabase } from './lib/supabase'
 import Admin from './pages/Admin'
 import AdminUsage from './pages/AdminUsage'
 import Dashboard from './pages/Dashboard'
+import Insights from './pages/Insights'
 import Login from './pages/Login'
 import MeetingDetail from './pages/MeetingDetail'
 import PendingApproval from './pages/PendingApproval'
@@ -80,6 +81,7 @@ function Shell() {
           MeetNotes
         </Link>
         <nav className="flex items-center gap-4 text-sm text-slate-500 underline dark:text-slate-400">
+          <Link to="/insights">{t('nav.insights')}</Link>
           {profile.is_admin && <Link to="/admin">{t('nav.admin')}</Link>}
           <Link to="/settings">{t('nav.settings')}</Link>
         </nav>
@@ -93,6 +95,7 @@ function Shell() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/record" element={<Record />} />
         <Route path="/meeting/:id" element={<MeetingDetail />} />
+        <Route path="/insights" element={<Insights />} />
         <Route path="/settings" element={<Settings />} />
         {profile.is_admin && <Route path="/admin" element={<Admin />} />}
         {profile.is_admin && <Route path="/admin/usage" element={<AdminUsage />} />}

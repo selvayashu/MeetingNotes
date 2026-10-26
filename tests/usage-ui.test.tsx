@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import { compact, labelIndexes, niceMax } from '../src/lib/chartScale'
+import { compact, labelIndexes, niceMax, niceMaxInteger } from '../src/lib/chartScale'
 
 const rpc = vi.hoisted(() => vi.fn())
 vi.mock('../src/lib/supabase', () => ({ supabase: { rpc } }))
@@ -23,6 +23,10 @@ describe('chart scale helpers', () => {
     expect(niceMax(8000)).toBe(10000)
     expect(niceMax(10000)).toBe(10000)
     expect(niceMax(10001)).toBe(20000)
+  })
+  it('keeps count axes in whole numbers (even end, so the middle tick is whole too)', () => {
+    expect([0, 1, 2, 3, 5, 7, 11].map(niceMaxInteger)).toEqual([2, 2, 2, 4, 6, 8, 20])
+    for (const v of [0, 1, 2, 3, 5, 7, 10, 11, 40, 99]) expect(niceMaxInteger(v) % 2).toBe(0)
   })
   it('compacts from 1,000 up', () => {
     expect([0, 999, 1000, 2500, 12000, 1_500_000].map(compact)).toEqual(['0', '999', '1K', '2.5K', '12K', '1.5M'])

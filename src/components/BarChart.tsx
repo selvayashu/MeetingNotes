@@ -1,5 +1,5 @@
 import { useId, useState, type ReactNode } from 'react'
-import { compact, labelIndexes, niceMax } from '../lib/chartScale'
+import { compact, labelIndexes, niceMax, niceMaxInteger } from '../lib/chartScale'
 
 export interface Bar {
   key: string
@@ -20,6 +20,8 @@ interface Props {
   table: ReactNode
   labels: { viewTable: string; viewChart: string; empty: string }
   format?: (n: number) => string
+  /** The values are whole numbers (counts): keep every axis tick a whole number too. */
+  integer?: boolean
   height?: number
 }
 
@@ -30,13 +32,13 @@ const PLOT_BAND = 24 // px reserved under the plot for the x labels, so the card
  * square base, a 2px gap between neighbours, hairline solid gridlines, one label on the newest bar, and a tooltip per
  * column that is also reachable by keyboard. Everything shown is also in the table view.
  */
-export default function BarChart({ bars, title, unit, limit, table, labels, format = (n) => n.toLocaleString(), height = 160 }: Props) {
+export default function BarChart({ bars, title, unit, limit, table, labels, format = (n) => n.toLocaleString(), integer = false, height = 160 }: Props) {
   const [view, setView] = useState<'chart' | 'table'>('chart')
   const [active, setActive] = useState<number | null>(null)
   const id = useId()
 
   const dataMax = Math.max(0, ...bars.map((b) => b.value), limit?.value ?? 0)
-  const max = niceMax(dataMax)
+  const max = integer ? niceMaxInteger(dataMax) : niceMax(dataMax)
   const pct = (v: number) => `${Math.min(100, (v / max) * 100)}%`
   const px = (v: number) => (Math.min(v, max) / max) * height // exact pixels, for things positioned from the column's bottom
   const showLabel = labelIndexes(bars.length)
@@ -71,7 +73,7 @@ export default function BarChart({ bars, title, unit, limit, table, labels, form
             ))}
           </div>
 
-          <div className="relative min-w-0 flex-1">
+          <div className="relative mr-3 min-w-0 flex-1"> {/* right margin: the newest x label is centred under its bar and would otherwise stick out */}
             {/* hairline solid grid */}
             <div className="absolute inset-x-0 top-0" style={{ height }} aria-hidden>
               {[0, 0.5, 1].map((f) => (

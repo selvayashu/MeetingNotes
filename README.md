@@ -182,6 +182,16 @@ next visit to the Record page (or a hint on the dashboard) offers **Recover it**
 upload path. The safety copy is deleted once the recording is in the upload queue. At most about a second of audio is lost.
 This relies on the browser's storage (private/incognito windows may refuse it; the app then records without a safety copy).
 
+## Insights
+
+**Insights** (in the header) shows, for the last 4, 12 or 26 weeks: meetings, hours recorded and average length (with the change versus the previous period), a
+meetings-per-week chart (with a table view), open / overdue / due-in-7-days action items, completion rate, an overdue list, open work per owner, and **frequent
+topics**. Everything is calculated in the browser from your own meetings under the normal row-level security, so no new data is stored.
+
+- Topics are recurring words from summaries, decisions and action items, ranked by how many *different* meetings mention them. This is simple word counting
+  (with English, Hindi and Tamil stop-word lists), not AI, so it is approximate.
+- **Talk time per speaker is not included**: it needs speaker labels (diarization), which the app does not produce yet.
+
 ## AI usage and the daily cap
 
 Workers AI bills in **neurons**. The free plan includes **10,000 per day for the whole Cloudflare account** (resetting at 00:00 UTC), and

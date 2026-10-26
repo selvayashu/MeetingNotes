@@ -7,6 +7,13 @@ export function niceMax(value: number): number {
   return nice * pow
 }
 
+/** Axis end for whole-number data: an even number, so the middle tick (half of it) is also a whole number. */
+export function niceMaxInteger(value: number): number {
+  if (!Number.isFinite(value) || value <= 2) return 2
+  // Small counts get the tightest even end (3 -> 4, 7 -> 8); larger ones use the usual round numbers (11 -> 20, 40 -> 50).
+  return value <= 10 ? 2 * Math.ceil(value / 2) : niceMax(value)
+}
+
 /** 0 / 1K / 2.5K style labels for axis ticks and compact figures. */
 export function compact(n: number): string {
   const a = Math.abs(n)
