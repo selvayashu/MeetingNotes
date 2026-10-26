@@ -15,7 +15,7 @@ async function loadSegments(meetingId: string): Promise<Segment[]> {
   for (let from = 0; ; from += 1000) {
     const { data, error } = await supabase
       .from('transcript_segments')
-      .select('id,start_ms,end_ms,text,original_text,edited_at')
+      .select('id,start_ms,end_ms,text,original_text,edited_at,asr_text')
       .eq('meeting_id', meetingId)
       .order('start_ms', { ascending: true })
       .range(from, from + 999)

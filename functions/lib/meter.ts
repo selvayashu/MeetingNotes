@@ -14,6 +14,9 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 export const NEURONS_PER_AUDIO_MINUTE = 46.6
 export const NEURONS_PER_INPUT_TOKEN = 0.026664
 export const NEURONS_PER_OUTPUT_TOKEN = 0.204818
+// Llama 3.1 8B fp8 (the Hindi spelling clean-up): $0.045 / $0.384 per million tokens.
+export const NEURONS_PER_INPUT_TOKEN_8B = 0.004119
+export const NEURONS_PER_OUTPUT_TOKEN_8B = 0.034868
 
 export interface CallUsage {
   kind: 'transcribe' | 'notes'
@@ -43,7 +46,9 @@ export function usageOf(model: string, out: unknown): CallUsage {
   const neurons =
     kind === 'transcribe'
       ? (audioSeconds / 60) * NEURONS_PER_AUDIO_MINUTE
-      : tokensIn * NEURONS_PER_INPUT_TOKEN + tokensOut * NEURONS_PER_OUTPUT_TOKEN
+      : /llama-3\.1-8b/i.test(model)
+        ? tokensIn * NEURONS_PER_INPUT_TOKEN_8B + tokensOut * NEURONS_PER_OUTPUT_TOKEN_8B
+        : tokensIn * NEURONS_PER_INPUT_TOKEN + tokensOut * NEURONS_PER_OUTPUT_TOKEN
   return { kind, audioSeconds, tokensIn, tokensOut, neurons, estimated: true }
 }
 

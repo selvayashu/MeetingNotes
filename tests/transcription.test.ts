@@ -73,8 +73,8 @@ describe('timeline stitching', () => {
       { start: 10.5, end: 10.2, text: 'odd' },
     ])
     expect(rows).toEqual([
-      { meeting_id: 'm1', start_ms: 300000, end_ms: 304880, text: 'Hello there.' },
-      { meeting_id: 'm1', start_ms: 310500, end_ms: 310500, text: 'odd' },
+      { meeting_id: 'm1', start_ms: 300000, end_ms: 304880, text: 'Hello there.', asr_text: null },
+      { meeting_id: 'm1', start_ms: 310500, end_ms: 310500, text: 'odd', asr_text: null },
     ])
   })
 

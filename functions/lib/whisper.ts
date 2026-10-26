@@ -10,6 +10,8 @@ export interface WhisperSegment {
 export interface WhisperResult {
   segments: WhisperSegment[]
   durationSeconds: number
+  /** Language Whisper used or detected, e.g. 'hi'. */
+  language?: string
 }
 
 // btoa on 3-byte-aligned pieces keeps peak memory low (no giant binary string).
@@ -44,7 +46,7 @@ export async function transcribe(
       const out = (await ai.run(MODEL as keyof AiModels, input as never)) as {
         segments?: WhisperSegment[]
         text?: string
-        transcription_info?: { duration?: number }
+        transcription_info?: { duration?: number; language?: string }
       }
       const segments =
         out.segments && out.segments.length > 0
@@ -52,7 +54,7 @@ export async function transcribe(
           : out.text?.trim()
             ? [{ start: 0, end: out.transcription_info?.duration ?? 0, text: out.text }]
             : []
-      return { segments, durationSeconds: out.transcription_info?.duration ?? 0 }
+      return { segments, durationSeconds: out.transcription_info?.duration ?? 0, language: out.transcription_info?.language }
     } catch (err) {
       lastErr = err
       // 3030 = undecodable audio: retrying won't help.

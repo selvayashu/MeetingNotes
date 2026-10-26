@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { isCronCaller } from '../lib/cron'
 import type { Env, MeetingRow } from '../lib/env'
+import { DEFAULT_FIX_MODEL, fixHindiLines, shouldFixHindi } from '../lib/fixText'
 import { Meter } from '../lib/meter'
 import { partOffsetMs, toSegmentRows } from '../lib/segments'
 import { runSummaryStage } from '../lib/summaryStage'
@@ -198,7 +199,12 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
       // Re-running a part (after a crash) must not duplicate its segments.
       await db.from('transcript_segments').delete().eq('meeting_id', meetingId).gte('start_ms', offsetMs)
-      const rows = toSegmentRows(meetingId, offsetMs, result.segments)
+      let rows = toSegmentRows(meetingId, offsetMs, result.segments)
+      // Hindi only: fix Whisper's spelling mistakes (keeps Whisper's text next to every changed line; never blocks processing).
+      if (rows.length > 0 && shouldFixHindi(env, meeting.language, result.language)) {
+        const fixed = await fixHindiLines(meter.ai as unknown as Parameters<typeof fixHindiLines>[0], rows, env.FIX_MODEL || DEFAULT_FIX_MODEL)
+        rows = rows.map((r, i) => (fixed[i] ? { ...r, text: fixed[i]!, asr_text: r.text } : r))
+      }
       for (let i = 0; i < rows.length; i += 500) {
         const { error } = await db.from('transcript_segments').insert(rows.slice(i, i + 500))
         if (error) throw error

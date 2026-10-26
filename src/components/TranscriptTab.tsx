@@ -126,6 +126,11 @@ export default function TranscriptTab({ segments, currentMs, playing, canSeek, o
   const small = 'rounded-2xl px-3 py-2 text-sm font-semibold disabled:opacity-60'
   return (
     <div className="flex flex-col gap-3">
+      {segments.some((s) => s.asr_text) && (
+        <p role="note" className="rounded-2xl bg-indigo-50 p-3 text-sm text-indigo-900 dark:bg-indigo-950 dark:text-indigo-100">
+          {t('transcript.autoFixed')}
+        </p>
+      )}
       <input
         type="search"
         value={query}

@@ -5,6 +5,8 @@ export interface SegmentRow {
   start_ms: number
   end_ms: number
   text: string
+  /** Whisper's own text when `text` was spell-corrected afterwards (Hindi), else null. */
+  asr_text: string | null
 }
 
 /** Shift part-relative Whisper timestamps (seconds) onto the meeting timeline (ms). */
@@ -21,6 +23,7 @@ export function toSegmentRows(
       start_ms: offsetMs + Math.round(s.start * 1000),
       end_ms: offsetMs + Math.round(Math.max(s.end, s.start) * 1000),
       text: s.text,
+      asr_text: null,
     }))
 }
 

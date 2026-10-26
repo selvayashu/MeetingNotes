@@ -421,5 +421,7 @@
   "dashboard.heroHelp": "भाषा और मीटिंग का प्रकार चुनें, फिर रिकॉर्ड करें। रोकने के कुछ मिनट बाद नोट्स दिखते हैं।",
   "dashboard.statMeetings": "मीटिंग, 7 दिन",
   "dashboard.statHours": "रिकॉर्ड, 7 दिन",
-  "dashboard.statOverdue": "देर से कार्य"
+  "dashboard.statOverdue": "देर से कार्य",
+
+  "transcript.autoFixed": "इस हिंदी ट्रांसक्रिप्ट की वर्तनी अपने आप सुधारी गई है। नाम और संख्याएँ जाँच लें।"
 }

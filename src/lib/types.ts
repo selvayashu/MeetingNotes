@@ -52,4 +52,6 @@ export interface Segment {
   /** Whisper's text, kept once a line has been edited (null = never edited). */
   original_text: string | null
   edited_at: string | null
+  /** Whisper's own words when this line was spell-corrected automatically (Hindi); null otherwise. */
+  asr_text?: string | null
 }

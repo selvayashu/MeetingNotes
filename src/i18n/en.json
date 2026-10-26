@@ -421,5 +421,7 @@
   "dashboard.heroHelp": "Choose the language and meeting type, then record. Notes appear a few minutes after you stop.",
   "dashboard.statMeetings": "Meetings, 7 days",
   "dashboard.statHours": "Recorded, 7 days",
-  "dashboard.statOverdue": "Overdue actions"
+  "dashboard.statOverdue": "Overdue actions",
+
+  "transcript.autoFixed": "The spelling of this Hindi transcript was improved automatically. Check names and numbers."
 }

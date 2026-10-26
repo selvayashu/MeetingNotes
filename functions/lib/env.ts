@@ -10,6 +10,10 @@ export interface Env {
   LLM_MODEL?: string
   /** Shared secret the Supabase scheduler sends in x-cron-secret. Unset disables background processing. */
   CRON_SECRET?: string
+  /** 'off' turns the automatic Hindi spelling clean-up off (default: on). */
+  HINDI_FIX?: string
+  /** Model used for the Hindi clean-up (default: Llama 3.1 8B fp8). */
+  FIX_MODEL?: string
 }
 
 export interface AudioPart {
