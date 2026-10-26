@@ -9,7 +9,9 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
-    "typecheck": "tsc -p functions/tsconfig.json"
+    "typecheck": "tsc -p functions/tsconfig.json",
+    "i18n:export": "node scripts/i18n-review.mjs export",
+    "i18n:apply": "node scripts/i18n-review.mjs apply"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",

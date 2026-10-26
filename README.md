@@ -182,6 +182,12 @@ next visit to the Record page (or a hint on the dashboard) offers **Recover it**
 upload path. The safety copy is deleted once the recording is in the upload queue. At most about a second of audio is lost.
 This relies on the browser's storage (private/incognito windows may refuse it; the app then records without a safety copy).
 
+## Hindi and Tamil text review
+
+The Hindi and Tamil wording was written by an AI assistant and is **not yet native-reviewed**. `docs/translation-review/` has a spreadsheet per language
+(`review-hi.csv`, `review-ta.csv`), a short list of key terms, and instructions for the reviewer. `npm run i18n:apply -- hi <filled-in.csv> --dry-run` previews
+their corrections (it refuses ones that break a `{placeholder}`), and without `--dry-run` applies them. Regenerate the sheets with `npm run i18n:export` after adding strings.
+
 ## Your data: export and delete
 
 **Settings → Your data**
