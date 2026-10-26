@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
+import DataSection from '../components/DataSection'
 import { useAuth } from '../hooks/useAuth'
 import { useI18n } from '../i18n/context'
 import { UI_LANGS, type TKey, type UiLang } from '../i18n/translate'
@@ -146,6 +147,8 @@ export default function Settings() {
       )}
 
       <ChangePassword />
+
+      <DataSection />
 
       <div className="flex items-center justify-between gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
         <p className="min-w-0 truncate text-sm text-slate-500 dark:text-slate-400">

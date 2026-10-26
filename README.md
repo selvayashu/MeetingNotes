@@ -182,6 +182,20 @@ next visit to the Record page (or a hint on the dashboard) offers **Recover it**
 upload path. The safety copy is deleted once the recording is in the upload queue. At most about a second of audio is lost.
 This relies on the browser's storage (private/incognito windows may refuse it; the app then records without a safety copy).
 
+## Your data: export and delete
+
+**Settings → Your data**
+
+- **Download my data** builds a ZIP in the browser from what the signed-in user can already read: `meetings.json` (everything), one readable Markdown file per
+  meeting, and a README. Tick *Include the audio recordings* to add the original audio (large). If some audio can't be fetched the export still completes and the
+  README lists what is missing; if any text table can't be read, the export fails instead of giving a partial file.
+- **Delete my account** (`POST /api/delete-account`, service role) needs the user's e-mail typed exactly. It deletes every recording under the user's folder first
+  (including orphaned uploads), then the auth user; the database cascades to profile, meetings, transcripts, notes and action items. If recordings can't be removed,
+  the account is left intact so the user can retry. The browser then clears queued uploads, crash-recovery drafts and saved preferences on that device.
+- **The only administrator can't delete themselves** (the request is refused until someone else is an approved administrator).
+- Kept after deletion: anonymous AI-usage rows (`ai_usage`, user id set to null; neurons and counts only, no content) so the usage totals stay correct.
+- Not covered: backups held by Supabase/Cloudflare follow their own retention, and anything the user already exported or shared.
+
 ## Landing page, sample meeting and first-run guide
 
 - **`/` for signed-out visitors** is a public landing page (what it does, honest notes on Tamil being experimental, admin approval and AI mistakes, language switch).
@@ -357,6 +371,11 @@ Automated: `npm test` and `npm run typecheck` must pass. Manual (needs a live Su
       the tab) and gets the app. Revoke them: their next request returns no data and processing is refused with 403.
 - [ ] A pending user calling `/api/process-meeting` with their own token gets 403; PATCHing their own `profiles.status`
       is rejected.
+
+**Export and delete**
+- [ ] *Download my data* gives a .zip that opens on your computer and lists your meetings (also try with *Include audio*).
+- [ ] *Delete my account* stays disabled until you type your e-mail exactly; with a throw-away account, confirm you are signed out and cannot sign in again.
+- [ ] After deleting, the recordings are gone from Supabase Storage and the admin user list.
 
 **AI usage and cap**
 - [ ] Admin → *Usage and AI limit* shows today's units after you process a meeting; the chart and the table view agree.

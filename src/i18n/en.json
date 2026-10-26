@@ -362,5 +362,24 @@
 
   "update.ready": "A new version of MeetNotes is ready.",
   "update.now": "Update",
-  "update.later": "Later"
+  "update.later": "Later",
+
+  "data.title": "Your data",
+  "data.exportHelp": "Download a copy of everything: your meetings, summaries, decisions, action items and transcripts, as one file you can open on your computer.",
+  "data.includeAudio": "Include the audio recordings (can be large and slow to download)",
+  "data.export": "Download my data",
+  "data.exporting": "Preparing…",
+  "data.audioProgress": "Downloading audio: {done} of {total}",
+  "data.exported": "Done. {n} meetings were saved to a file.",
+  "data.exportedMissing": "Done. {n} meetings were saved. {missing} audio files could not be downloaded (see README.txt in the file).",
+  "data.exportFailed": "Could not prepare your data. Please try again.",
+  "data.deleteTitle": "Delete my account",
+  "data.deleteWhat": "This permanently deletes your account, all your meetings, notes, action items, transcripts and audio recordings.",
+  "data.deleteKept": "Only anonymous usage totals (how much AI was used, with no names or content) are kept, because they are part of the service totals.",
+  "data.deleteNoUndo": "This cannot be undone. Download your data first if you want a copy.",
+  "data.deleteType": "To confirm, type your e-mail address: {email}",
+  "data.deleteTypeLabel": "Type your e-mail to confirm",
+  "data.delete": "Delete my account",
+  "data.deleting": "Deleting…",
+  "data.deleteFailed": "Could not delete the account. Nothing was lost. Please try again."
 }
