@@ -15,6 +15,7 @@ export interface Meeting {
   meeting_date: string
   language: Lang
   notes_language: Lang
+  template: string
   duration_seconds: number | null
   status: MeetingStatus
   error_message: string | null
@@ -31,6 +32,8 @@ export interface MeetingNotes {
   decisions: string[]
   /** When these notes were written; edits to the transcript after this make them stale. */
   generated_at: string | null
+  /** Meeting type the notes were written with (null: before meeting types existed). */
+  notes_template: string | null
 }
 
 export interface ActionItem {

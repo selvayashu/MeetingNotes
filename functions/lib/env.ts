@@ -25,6 +25,8 @@ export interface MeetingRow {
   user_id: string
   language: 'en' | 'hi' | 'ta' | 'auto'
   notes_language: 'en' | 'hi' | 'ta' | 'auto'
+  /** Meeting type; steers how the notes are written. Missing/unknown = 'general'. */
+  template?: string
   meeting_date: string
   status: 'uploaded' | 'transcribing' | 'summarising' | 'done' | 'failed'
   audio_parts: AudioPart[]

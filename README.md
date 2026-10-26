@@ -182,6 +182,19 @@ next visit to the Record page (or a hint on the dashboard) offers **Recover it**
 upload path. The safety copy is deleted once the recording is in the upload queue. At most about a second of audio is lost.
 This relies on the browser's storage (private/incognito windows may refuse it; the app then records without a safety copy).
 
+## Meeting types (templates)
+
+On the Record/upload screen (and later on the meeting page) you pick the **meeting type**: General, Stand-up, One-to-one, Client call, Interview or Brainstorm.
+The type only changes what the AI is told to focus on (for example a stand-up is summarised person by person, a client call around commitments and next steps); the
+notes always have the same shape (summary, decisions, action items), so editing, export and Insights work the same for every type.
+
+- Stored in `meetings.template` (default `general`, so older meetings are unchanged) and in `meeting_notes.notes_template` (which type the current notes were written with).
+- Changing the type on a finished meeting shows a banner offering **Update notes**, which rewrites them from the transcript (same action as after a transcript edit).
+- **Interview** is deliberately restricted: it records what was said, does not rate or compare candidates or recommend a decision, and never infers personal
+  characteristics. It is a note-taking aid, not a hiring tool; people decisions should not rest on AI summaries.
+- The type list lives in three places (database CHECK, `functions/lib/templates.ts`, `src/lib/templates.ts`); a test fails if they drift apart.
+- The guidance text lives in `functions/lib/templates.ts` and is English; it works for Hindi and Tamil meetings too because the output language is set separately.
+
 ## Hindi and Tamil text review
 
 The Hindi and Tamil wording was written by an AI assistant and is **not yet native-reviewed**. `docs/translation-review/` has a spreadsheet per language
@@ -377,6 +390,11 @@ Automated: `npm test` and `npm run typecheck` must pass. Manual (needs a live Su
       the tab) and gets the app. Revoke them: their next request returns no data and processing is refused with 403.
 - [ ] A pending user calling `/api/process-meeting` with their own token gets 403; PATCHing their own `profiles.status`
       is rejected.
+
+**Meeting types**
+- [ ] Record a short meeting as *Stand-up* (say two names with done/plan/blocker) and check the summary is per person; do the same as *Client call* and check commitments become action items.
+- [ ] On a finished meeting, change the type: a banner offers *Update notes*; after updating, the banner goes away.
+- [ ] The chosen type is remembered for your next recording.
 
 **Export and delete**
 - [ ] *Download my data* gives a .zip that opens on your computer and lists your meetings (also try with *Include audio*).

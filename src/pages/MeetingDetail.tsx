@@ -3,6 +3,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import ActionItemsTab from '../components/ActionItemsTab'
 import AudioBar from '../components/AudioBar'
 import SummaryTab from '../components/SummaryTab'
+import TemplateSelect from '../components/TemplateSelect'
+import { isTemplate, templateChanged, type TemplateId } from '../lib/templates'
 import TranscriptTab from '../components/TranscriptTab'
 import { useAudioTimeline } from '../hooks/useAudioTimeline'
 import { useMeeting } from '../hooks/useMeeting'
@@ -88,6 +90,17 @@ export default function MeetingDetail() {
       if (error) return setActionError(error.message)
       setActionError(null)
       patch((d) => ({ ...d, meeting: { ...d.meeting, title: next } }))
+    },
+    [data, patch],
+  )
+
+  const saveTemplateChoice = useCallback(
+    async (id: TemplateId) => {
+      if (!data || id === data.meeting.template) return
+      const { error } = await supabase.from('meetings').update({ template: id }).eq('id', data.meeting.id)
+      if (error) return setActionError(error.message)
+      setActionError(null)
+      patch((d) => ({ ...d, meeting: { ...d.meeting, template: id } }))
     },
     [data, patch],
   )
@@ -195,6 +208,7 @@ export default function MeetingDetail() {
   const { meeting, notes, items, segments } = data
   const done = meeting.status === 'done'
   const staleNotes = done && notesAreStale(segments, notes?.generated_at)
+  const typeChanged = done && !!notes && templateChanged(meeting.template, notes.notes_template)
   const menu: [string, () => void][] = [
     [t('detail.share'), share],
     [t('detail.copyMd'), copyMarkdown],
@@ -259,6 +273,15 @@ export default function MeetingDetail() {
         )}
       </div>
 
+      {done && (
+        <TemplateSelect
+          value={isTemplate(meeting.template) ? meeting.template : 'general'}
+          onChange={(id) => void saveTemplateChoice(id)}
+          disabled={!!running}
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900"
+        />
+      )}
+
       {flash && (
         <p role="status" className="rounded-lg bg-emerald-100 p-2 text-sm text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-100">
           {flash}
@@ -270,6 +293,14 @@ export default function MeetingDetail() {
         <p role="status" className="rounded-lg bg-indigo-50 p-3 text-sm text-indigo-900 dark:bg-indigo-950 dark:text-indigo-100">
           {running}
         </p>
+      )}
+      {typeChanged && !staleNotes && !running && (
+        <div role="status" className="flex flex-col gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-100">
+          <p>{t('template.changedBanner')}</p>
+          <button onClick={updateNotes} className="self-start rounded-lg bg-amber-600 px-3 py-2 font-semibold text-white">
+            {t('notesStale.update')}
+          </button>
+        </div>
       )}
       {staleNotes && !running && (
         <div role="status" className="flex flex-col gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-100">

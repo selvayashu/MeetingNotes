@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ConsentNotice from '../components/ConsentNotice'
+import TemplateSelect from '../components/TemplateSelect'
+import { readTemplate, saveTemplate, type TemplateId } from '../lib/templates'
 import { useAuth } from '../hooks/useAuth'
 import { useDraftRecovery } from '../hooks/useDraftRecovery'
 import { useRecorder } from '../hooks/useRecorder'
@@ -31,6 +33,7 @@ export default function Record() {
   const [title, setTitle] = useState('')
   const [language, setLanguage] = useState<Lang>(() => readSpokenLanguage(lang))
   const [notesLanguage, setNotesLanguage] = useState<Lang>('en')
+  const [template, setTemplate] = useState<TemplateId>(() => readTemplate())
   const [file, setFile] = useState<File | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -74,6 +77,7 @@ export default function Record() {
         title: title.trim() || file?.name.replace(/\.[^.]+$/, '') || t('record.untitled'),
         language,
         notesLanguage,
+        template,
         consent: true,
       })
       setConsent(false)
@@ -170,6 +174,15 @@ export default function Record() {
           </select>
         </label>
       </div>
+
+      <TemplateSelect
+        value={template}
+        onChange={(id) => {
+          setTemplate(id)
+          saveTemplate(id)
+        }}
+        className={fieldCls}
+      />
 
       {language === 'auto' && <p className="-mt-2 text-xs text-slate-500 dark:text-slate-400">{t('record.langHint')}</p>}
       {language === 'ta' && <p className="-mt-2 text-xs text-amber-700 dark:text-amber-400">{t('record.tamilNote')}</p>}

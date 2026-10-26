@@ -36,7 +36,7 @@ export function useMeeting(id: string | undefined) {
     try {
       const [m, n, a, segments] = await Promise.all([
         supabase.from('meetings').select('*').eq('id', id).maybeSingle(),
-        supabase.from('meeting_notes').select('summary,decisions,generated_at').eq('meeting_id', id).maybeSingle(),
+        supabase.from('meeting_notes').select('summary,decisions,generated_at,notes_template').eq('meeting_id', id).maybeSingle(),
         supabase
           .from('action_items')
           .select('id,task,owner,due_date,is_done')
@@ -53,7 +53,7 @@ export function useMeeting(id: string | undefined) {
       setData({
         meeting: m.data as Meeting,
         notes: n.data
-          ? { summary: n.data.summary, decisions: (n.data.decisions as string[]) ?? [], generated_at: n.data.generated_at }
+          ? { summary: n.data.summary, decisions: (n.data.decisions as string[]) ?? [], generated_at: n.data.generated_at, notes_template: n.data.notes_template }
           : null,
         items: a.data as ActionItem[],
         segments,

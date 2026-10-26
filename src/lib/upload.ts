@@ -31,6 +31,7 @@ export async function uploadRecording(item: PendingRecording): Promise<void> {
       meeting_date: item.meetingDate,
       language: item.language,
       notes_language: item.notesLanguage,
+      template: item.template ?? 'general',
       duration_seconds: total,
       audio_path: audioParts[0]?.path ?? null,
       audio_parts: audioParts,

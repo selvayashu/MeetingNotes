@@ -381,5 +381,20 @@
   "data.deleteTypeLabel": "पुष्टि के लिए अपना ई-मेल लिखें",
   "data.delete": "मेरा खाता हटाएँ",
   "data.deleting": "हटाया जा रहा है…",
-  "data.deleteFailed": "खाता नहीं हट सका। कुछ भी नहीं खोया। कृपया फिर कोशिश करें।"
+  "data.deleteFailed": "खाता नहीं हट सका। कुछ भी नहीं खोया। कृपया फिर कोशिश करें।",
+
+  "template.label": "मीटिंग का प्रकार",
+  "template.general.name": "सामान्य मीटिंग",
+  "template.general.help": "सामान्य नोट्स: सारांश, निर्णय और कार्य।",
+  "template.standup.name": "स्टैंड-अप",
+  "template.standup.help": "हर व्यक्ति के अनुसार सारांश: क्या किया, क्या करेंगे और रुकावटें।",
+  "template.one_on_one.name": "आमने-सामने बातचीत (1:1)",
+  "template.one_on_one.help": "दो लोगों के बीच विषय, प्रतिक्रिया और आगे की कार्रवाई।",
+  "template.client_call.name": "क्लाइंट कॉल",
+  "template.client_call.help": "क्लाइंट को क्या चाहिए, आपने क्या वादा किया और अगले कदम।",
+  "template.interview.name": "इंटरव्यू",
+  "template.interview.help": "बातचीत का तथ्यात्मक विवरण। यह उम्मीदवारों को रेट नहीं करता और सिफ़ारिश नहीं देता।",
+  "template.brainstorm.name": "विचार-मंथन",
+  "template.brainstorm.help": "सामने आए विचार, कौन-से पसंद या खारिज हुए, और आगे क्या देखा जाएगा।",
+  "template.changedBanner": "ये नोट्स लिखे जाने के बाद मीटिंग का प्रकार बदला गया। नए प्रकार के अनुसार नोट्स अपडेट करें।"
 }

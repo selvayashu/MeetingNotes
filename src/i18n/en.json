@@ -381,5 +381,20 @@
   "data.deleteTypeLabel": "Type your e-mail to confirm",
   "data.delete": "Delete my account",
   "data.deleting": "Deleting…",
-  "data.deleteFailed": "Could not delete the account. Nothing was lost. Please try again."
+  "data.deleteFailed": "Could not delete the account. Nothing was lost. Please try again.",
+
+  "template.label": "Meeting type",
+  "template.general.name": "General meeting",
+  "template.general.help": "Standard notes: summary, decisions and action items.",
+  "template.standup.name": "Stand-up",
+  "template.standup.help": "Summary by person: done, planned and blockers.",
+  "template.one_on_one.name": "One-to-one",
+  "template.one_on_one.help": "Topics, feedback and follow-ups between two people.",
+  "template.client_call.name": "Client call",
+  "template.client_call.help": "What the client needs, what you committed to, and next steps.",
+  "template.interview.name": "Interview",
+  "template.interview.help": "Factual record of the conversation. It does not rate or recommend candidates.",
+  "template.brainstorm.name": "Brainstorm",
+  "template.brainstorm.help": "Ideas raised, which were favoured or dropped, and what is explored next.",
+  "template.changedBanner": "The meeting type was changed after these notes were written. Update the notes to use the new type."
 }

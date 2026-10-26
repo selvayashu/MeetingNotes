@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { templateGuidance } from './templates'
 
 export const DEFAULT_LLM = '@cf/meta/llama-3.3-70b-instruct-fp8-fast'
 
@@ -146,11 +147,13 @@ export interface NotesOptions {
   /** Output language for notes: 'en' | 'hi' | 'ta' | 'same' (same as the meeting's main language). */
   outLang: 'en' | 'hi' | 'ta' | 'same'
   meetingDateIso: string
+  /** Meeting type id (see templates.ts); unknown or missing means the standard notes. */
+  template?: string
 }
 
 const LANG_NAME = { en: 'English', hi: 'Hindi (Devanagari script)', ta: 'Tamil', same: 'the main language of the transcript' }
 
-function systemPrompt(o: NotesOptions, mode: 'chunk' | 'merge'): string {
+export function systemPrompt(o: NotesOptions, mode: 'chunk' | 'merge'): string {
   const d = new Date(o.meetingDateIso)
   const day = WEEKDAYS[d.getUTCDay()]
   const lang = LANG_NAME[o.outLang]
@@ -163,6 +166,7 @@ function systemPrompt(o: NotesOptions, mode: 'chunk' | 'merge'): string {
     mode === 'merge'
       ? '"summary": ONE concise summary of the whole meeting, at most 6 sentences (under 150 words). Do not write one paragraph per part;'
       : '"summary": a concise factual summary of what was discussed and concluded, 1-5 sentences (under 120 words);',
+    ...(templateGuidance(o.template) ? [templateGuidance(o.template)] : []),
     'Summaries contain only what is in the input. No filler, opinions, predictions, or generic remarks about the meeting\'s importance or tone.',
     '"decisions": array of strings, only decisions that were explicitly made;',
     '"action_items": array of {"task": string, "owner": string or null, "due_date": string or null}.',

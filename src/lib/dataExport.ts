@@ -51,7 +51,7 @@ export async function fetchAllData(userId: string, email: string): Promise<AllDa
     supabase.from('profiles').select('full_name,preferred_language,delete_audio_after_notes,created_at').eq('id', userId).maybeSingle(),
     readAll<Meeting>((a, b) => supabase.from('meetings').select('*').order('meeting_date', { ascending: false }).order('id').range(a, b)),
     readAll<MeetingNotes & { meeting_id: string }>((a, b) =>
-      supabase.from('meeting_notes').select('meeting_id,summary,decisions,generated_at').order('meeting_id').range(a, b),
+      supabase.from('meeting_notes').select('meeting_id,summary,decisions,generated_at,notes_template').order('meeting_id').range(a, b),
     ),
     readAll<ActionItem & { meeting_id: string }>((a, b) =>
       supabase.from('action_items').select('id,meeting_id,task,owner,due_date,is_done').order('id').range(a, b),
@@ -127,7 +127,7 @@ export async function buildArchive(d: AllData, audio: { files: AudioFile[]; miss
     meetings: d.meetings.map((m) => ({
       ...m,
       notes: d.notes[m.id]
-        ? { summary: d.notes[m.id].summary, decisions: d.notes[m.id].decisions, generated_at: d.notes[m.id].generated_at }
+        ? { summary: d.notes[m.id].summary, decisions: d.notes[m.id].decisions, generated_at: d.notes[m.id].generated_at, notes_template: d.notes[m.id].notes_template }
         : null,
       action_items: (d.items[m.id] ?? []).map(({ id: _id, ...a }) => a),
       transcript: (d.segments[m.id] ?? []).map(({ id: _id, ...s }) => s),

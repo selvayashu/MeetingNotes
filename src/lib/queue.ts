@@ -11,6 +11,8 @@ export interface PendingRecording {
   consent?: boolean
   language: 'en' | 'hi' | 'ta' | 'auto'
   notesLanguage: 'en' | 'hi' | 'ta' | 'auto'
+  /** Meeting type; absent on items queued before meeting types existed. */
+  template?: string
   meetingDate: string
   createdAt: number
 }

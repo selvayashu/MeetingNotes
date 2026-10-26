@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Env, MeetingRow } from './env'
+import { normaliseTemplate } from './templates'
 import {
   CHUNK_CHARS,
   DEFAULT_LLM,
@@ -48,6 +49,7 @@ async function finish(db: SupabaseClient, env: Env, m: MeetingRow, notes: Notes,
       summary: notes.summary,
       decisions: notes.decisions,
       raw_llm_output: { ...(state ?? {}), final: notes },
+      notes_template: normaliseTemplate(m.template), // lets the app tell if the type was changed after these notes
       generated_at: new Date().toISOString(), // lets the app tell when later transcript edits made the notes stale
     },
     { onConflict: 'meeting_id' },
@@ -117,7 +119,7 @@ export async function runSummaryStage(args: {
     model,
     chunks,
     state: (existing?.raw_llm_output as SummaryState | null) ?? null,
-    options: { outLang: outputLanguage(meeting), meetingDateIso: meeting.meeting_date },
+    options: { outLang: outputLanguage(meeting), meetingDateIso: meeting.meeting_date, template: meeting.template },
     deadline,
     save: async (state) => {
       const { error } = await db
