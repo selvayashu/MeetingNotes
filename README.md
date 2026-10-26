@@ -182,6 +182,19 @@ next visit to the Record page (or a hint on the dashboard) offers **Recover it**
 upload path. The safety copy is deleted once the recording is in the upload queue. At most about a second of audio is lost.
 This relies on the browser's storage (private/incognito windows may refuse it; the app then records without a safety copy).
 
+## Audio retention
+
+**Settings → Keep audio recordings**: *Until I delete them* (default), 7, 30 or 90 days. Once a finished meeting is older than that, its recording is deleted
+automatically; the transcript, summary, decisions and action items stay (the meeting page already explains that the audio is gone). The existing *Delete audio
+after notes are generated* option still deletes sooner, and the dropdown says so while it is on.
+
+- A daily scheduled job (`meetnotes-audio-retention`, 03:17 UTC, `kick_retention()`) calls `POST /api/retention` with the same `x-cron-secret` as background
+  processing. Needs the `retention_url` row in `app_config` (`https://<site>/api/retention`); without it, nothing happens.
+- Only meetings with status *done* are touched, never ones still being processed. Files are removed first and the meeting row is cleared afterwards, so a storage
+  failure means "try again tomorrow".
+- `audio_parts` is written by the browser, so the job only removes paths inside the meeting owner's own folder.
+- The check is once a day, so a recording can live up to a day beyond its period.
+
 ## Meeting types (templates)
 
 On the Record/upload screen (and later on the meeting page) you pick the **meeting type**: General, Stand-up, One-to-one, Client call, Interview or Brainstorm.
@@ -390,6 +403,10 @@ Automated: `npm test` and `npm run typecheck` must pass. Manual (needs a live Su
       the tab) and gets the app. Revoke them: their next request returns no data and processing is refused with 403.
 - [ ] A pending user calling `/api/process-meeting` with their own token gets 403; PATCHing their own `profiles.status`
       is rejected.
+
+**Audio retention**
+- [ ] Set *Keep audio recordings* to 7 days: the setting is saved and survives a reload. (Deletion itself is exercised by the scheduler; see the test notes in the commit history.)
+- [ ] With *Delete audio after notes are generated* ticked, the retention dropdown is disabled and explains why.
 
 **Meeting types**
 - [ ] Record a short meeting as *Stand-up* (say two names with done/plan/blocker) and check the summary is per person; do the same as *Client call* and check commitments become action items.

@@ -396,5 +396,11 @@
   "template.interview.help": "Factual record of the conversation. It does not rate or recommend candidates.",
   "template.brainstorm.name": "Brainstorm",
   "template.brainstorm.help": "Ideas raised, which were favoured or dropped, and what is explored next.",
-  "template.changedBanner": "The meeting type was changed after these notes were written. Update the notes to use the new type."
+  "template.changedBanner": "The meeting type was changed after these notes were written. Update the notes to use the new type.",
+
+  "retention.label": "Keep audio recordings",
+  "retention.forever": "Until I delete them",
+  "retention.days": "{n} days",
+  "retention.help": "After this time the recording is deleted automatically. The transcript, summary and action items stay. Checked once a day.",
+  "retention.overridden": "Not needed while \"Delete audio after notes are generated\" is on, which already deletes the audio sooner."
 }

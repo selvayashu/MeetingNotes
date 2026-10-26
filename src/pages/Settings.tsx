@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import DataSection from '../components/DataSection'
+import RetentionSetting, { type Retention } from '../components/RetentionSetting'
 import { useAuth } from '../hooks/useAuth'
 import { useI18n } from '../i18n/context'
 import { UI_LANGS, type TKey, type UiLang } from '../i18n/translate'
@@ -56,16 +57,20 @@ export default function Settings() {
   const { user, signOut } = useAuth()
   const { pref, setPref } = useTheme()
   const [deleteAudio, setDeleteAudio] = useState<boolean | null>(null)
+  const [retention, setRetention] = useState<Retention | undefined>(undefined)
   const [msg, setMsg] = useState<{ text: string; error: boolean } | null>(null)
 
   useEffect(() => {
     if (!user) return
     void supabase
       .from('profiles')
-      .select('delete_audio_after_notes')
+      .select('delete_audio_after_notes,audio_retention_days')
       .eq('id', user.id)
       .maybeSingle()
-      .then(({ data }) => setDeleteAudio(data?.delete_audio_after_notes ?? false))
+      .then(({ data }) => {
+        setDeleteAudio(data?.delete_audio_after_notes ?? false)
+        setRetention((data?.audio_retention_days ?? null) as Retention)
+      })
   }, [user])
 
   async function saveProfile(patch: Record<string, unknown>) {
@@ -78,6 +83,12 @@ export default function Settings() {
   async function onDeleteAudio(next: boolean) {
     setDeleteAudio(next)
     if (!(await saveProfile({ delete_audio_after_notes: next }))) setDeleteAudio(!next)
+  }
+
+  async function onRetention(next: Retention) {
+    const before = retention
+    setRetention(next)
+    if (!(await saveProfile({ audio_retention_days: next }))) setRetention(before)
   }
 
   function onLang(l: UiLang) {
@@ -139,6 +150,8 @@ export default function Settings() {
           <span className="block text-sm text-slate-500 dark:text-slate-400">{t('settings.deleteAudioHelp')}</span>
         </span>
       </label>
+
+      <RetentionSetting value={retention} onChange={(v) => void onRetention(v)} overridden={deleteAudio === true} />
 
       {msg && (
         <p role={msg.error ? 'alert' : 'status'} className={`text-sm ${msg.error ? 'text-red-600' : 'text-emerald-700 dark:text-emerald-400'}`}>
