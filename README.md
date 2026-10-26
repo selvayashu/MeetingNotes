@@ -182,6 +182,13 @@ next visit to the Record page (or a hint on the dashboard) offers **Recover it**
 upload path. The safety copy is deleted once the recording is in the upload queue. At most about a second of audio is lost.
 This relies on the browser's storage (private/incognito windows may refuse it; the app then records without a safety copy).
 
+## Hindi spelling clean-up
+
+Whisper's Hindi has many spelling mistakes, so Hindi transcripts are automatically corrected by a small language model (Llama 3.1 8B) right after transcription:
+word errors fall by roughly a third to a half in tests (details and limits in `docs/accuracy.md`). Lines that were corrected keep Whisper's original in `asr_text`, and the
+Transcript tab says so. It costs about a third more AI units for Hindi meetings. Set `HINDI_FIX=off` to disable it, or `FIX_MODEL` to use another model. **Tamil is not
+corrected** (no worthwhile gain); Tamil stays experimental.
+
 ## Look and feel ("friendly cards")
 
 The interface follows design option C: a soft lilac background (deep indigo in dark mode), white rounded cards, and a floating bottom navigation (Meetings, Insights,

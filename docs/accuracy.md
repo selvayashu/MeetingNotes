@@ -75,3 +75,51 @@ language 25% of the time and raised word errors from about 30% to 49%. The Recor
 
 **If Tamil quality matters for your users,** the next things to try are a larger or Indic-specific speech model (usually not free), or
 letting users correct the transcript (planned: transcript editing).
+
+## Improving Hindi and Tamil (tested 2026-10-28)
+
+Reproduce with `scripts/asr-experiments/` (see its README). Clips are FLEURS (12 per language unless noted). Whisper varies by several points
+between runs, so only differences above about 6 points are real. **The baseline moved between 28% and 31% for Hindi and between 79% and 94% for Tamil
+on these clips.**
+
+### Other speech models
+| Model | Hindi WER / CER | Tamil WER / CER | Cost (Workers AI) |
+|---|---|---|---|
+| `whisper-large-v3-turbo` (production) | 28.4% / 10.0% (8 clips) | 86.9% / 44.1% (8 clips) | about 47 neurons per audio minute |
+| `@cf/openai/whisper` (older) | 134.8% / 125.5% | 89.3% / 49.3% | cheaper, but unusable for Hindi (no language hint, wrong output) |
+| `@cf/deepgram/nova-3` | **15.9% / 9.4%** (8 clips) | **not supported** (error 8007) | **about 473 neurons per audio minute, 10 times Whisper** |
+
+Nova-3 is clearly better for Hindi in word errors (character errors are about the same, so part of the gain is spelling and word boundaries) but would use up the
+free 10,000 units a day after about 21 minutes of audio, and it cannot do Tamil at all. It is **not used**; it is the option to consider if Hindi quality is worth paying for.
+
+### Free post-processing of Whisper's text
+| Variant | Hindi WER / CER | Tamil WER / CER |
+|---|---|---|
+| Whisper as is | 29.8% / 10.8% | 79.1% / 36.1% |
+| drop words in other or mixed scripts | 29.8% / 10.8% | 74.4% / 36.3% |
+| LLM spelling correction, Llama 3.3 70B | 21.0% / 8.9% (15.7% / 6.7% with a looser prompt) | 68.4% / 34.4% |
+| LLM spelling correction, Llama 3.1 8B | **20.4% / 9.0%** | 70.2% / 36.8% |
+
+- The LLM is told to fix only clearly wrong spellings and to keep names, numbers and English words. The 8B model is about as good as the 70B one for Hindi at
+  one sixth of the price, so it is the one used.
+- **Is it just remembering the test sentences?** FLEURS sentences come from Wikipedia, which the model may have seen. So it was also tested on 16 Hindi
+  meeting sentences written for this test (some with English words mixed in), deliberately damaged with typical Whisper-style spelling errors:
+  word errors **23.8% before, 8.8% after** (8B) and 7.7% (70B). It does generalise.
+- **What it gets wrong:** on already-correct text it still changes about 5 to 9% of words, mostly respelling English words in Devanagari ("client" becomes
+  "क्लाइंट") or small wording changes. That is why every line is checked and why Whisper's own text is kept next to every changed line.
+- **Tamil:** word errors improve by about 9 to 11 points but character errors barely move (36.1% to 34.4 to 36.8%). The words are still mostly wrong, so
+  it is not worth the cost and is **not applied**.
+
+### What shipped (Hindi only)
+After Whisper, Hindi meetings (chosen as Hindi, or Auto-detect that detected Hindi) go through the 8B spelling pass in batches of about 20 lines
+(`functions/lib/fixText.ts`). A corrected line is accepted only if it is plausible: similar length, still mostly Devanagari, and at most half of its words changed.
+Any failure keeps Whisper's text. Corrected lines store Whisper's original in `transcript_segments.asr_text`, and the Transcript tab says the spelling
+was improved automatically. Turn it off with the `HINDI_FIX=off` variable; change the model with `FIX_MODEL`.
+
+**Measured on the deployed site** with 58 seconds of real Hindi speech: word errors 31.7% to 18.7% (character errors 9.7% to 9.9%, unchanged).
+**Cost:** about 35% more AI units on top of Whisper for Hindi meetings (45 units of speech plus about 16 of text in that test).
+
+### Tamil: what is left
+No free option helped. Whisper large-v3-turbo is the limit (about 80% word and 35% character errors) and Workers AI has no better Tamil model.
+Options that need a decision and money or hosting: a cloud speech service with Tamil support (for example Google Cloud Speech-to-Text or Azure Speech),
+or hosting an Indic model such as AI4Bharat's IndicConformer yourself. Until then the app labels Tamil as experimental and the transcript can be edited.
