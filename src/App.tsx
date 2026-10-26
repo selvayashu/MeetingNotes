@@ -1,21 +1,24 @@
 import { useEffect, useState } from 'react'
-import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router-dom'
 import ErrorBoundary from './components/ErrorBoundary'
 import Logo from './components/Logo'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { useProfile } from './hooks/useProfile'
 import { useI18n } from './i18n/context'
 import { isUiLang } from './i18n/translate'
+import { isLinkError } from './lib/authErrors'
 import { isSupabaseConfigured, supabase } from './lib/supabase'
 import Admin from './pages/Admin'
 import AdminUsage from './pages/AdminUsage'
 import Dashboard from './pages/Dashboard'
 import Insights from './pages/Insights'
+import Landing from './pages/Landing'
 import Login from './pages/Login'
 import MeetingDetail from './pages/MeetingDetail'
 import PendingApproval from './pages/PendingApproval'
 import ResetPassword from './pages/ResetPassword'
 import Record from './pages/Record'
+import Sample from './pages/Sample'
 import Settings from './pages/Settings'
 import { applyTheme, readTheme } from './theme'
 
@@ -64,7 +67,17 @@ function Shell() {
   useAdoptProfileLanguage(user?.id)
 
   if (loading || (user && profileLoading)) return <p className="p-6 text-slate-500 dark:text-slate-400">{t('common.loading')}</p>
-  if (!user) return <Login />
+  if (!user) {
+    // A dead e-mail link (expired reset link, etc.) lands on whatever page the link points to: always show the sign-in screen for it.
+    if (isLinkError(window.location.hash + window.location.search)) return <Login />
+    return (
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/sample" element={<Sample />} />
+        <Route path="*" element={<Login />} />
+      </Routes>
+    )
+  }
   // Opened from a "reset password" e-mail: choosing a new password comes before anything else.
   if (recovery) return <ResetPassword />
   if (profileError) return <p role="alert" className="p-6 text-red-600 dark:text-red-400">{profileError}</p>
@@ -96,9 +109,11 @@ function Shell() {
         <Route path="/record" element={<Record />} />
         <Route path="/meeting/:id" element={<MeetingDetail />} />
         <Route path="/insights" element={<Insights />} />
+        <Route path="/sample" element={<Sample />} />
         <Route path="/settings" element={<Settings />} />
         {profile.is_admin && <Route path="/admin" element={<Admin />} />}
         {profile.is_admin && <Route path="/admin/usage" element={<AdminUsage />} />}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </main>
   )

@@ -182,6 +182,17 @@ next visit to the Record page (or a hint on the dashboard) offers **Recover it**
 upload path. The safety copy is deleted once the recording is in the upload queue. At most about a second of audio is lost.
 This relies on the browser's storage (private/incognito windows may refuse it; the app then records without a safety copy).
 
+## Landing page, sample meeting and first-run guide
+
+- **`/` for signed-out visitors** is a public landing page (what it does, honest notes on Tamil being experimental, admin approval and AI mistakes, language switch).
+  "Create an account" goes to `/login?mode=signup`. Signed-in users still get the dashboard at `/`. Any other signed-out address shows the sign-in screen, as before,
+  and expired e-mail links still land on "forgot password".
+- **`/sample`** is a read-only example meeting (summary, decisions, action items, transcript) in the current language. It is fixed text: nothing is recorded, saved or
+  sent, it needs no account, and it makes no AI calls.
+- **First-run card** on the dashboard while a user has no meetings: three steps plus "Record my first meeting" / "Try the sample". Dismissal is remembered per user
+  in this browser only.
+- The Hindi and Tamil text on these pages was written without a native reviewer.
+
 ## Insights
 
 **Insights** (in the header) shows, for the last 4, 12 or 26 weeks: meetings, hours recorded and average length (with the change versus the previous period), a

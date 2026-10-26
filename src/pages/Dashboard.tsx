@@ -6,6 +6,7 @@ import { formatClock } from '../lib/audio'
 import { useAuth } from '../hooks/useAuth'
 import { useDraftRecovery } from '../hooks/useDraftRecovery'
 import { useQueueSync } from '../hooks/useQueueSync'
+import Onboarding from '../components/Onboarding'
 import { useI18n } from '../i18n/context'
 import type { TKey } from '../i18n/translate'
 
@@ -132,6 +133,7 @@ export default function Dashboard() {
         </p>
       )}
       {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {user && meetings?.length === 0 && <Onboarding userId={user.id} />}
 
       <div className="flex flex-col gap-2">
         <input

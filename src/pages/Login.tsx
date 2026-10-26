@@ -17,7 +17,9 @@ export default function Login() {
   const { t, lang, setLang } = useI18n()
   // A dead password-reset link lands here with an error in the URL: send the user straight to "forgot".
   const linkBroken = typeof window !== 'undefined' && isLinkError(window.location.hash + window.location.search)
-  const [mode, setMode] = useState<Mode>(linkBroken ? 'forgot' : 'signin')
+  const [mode, setMode] = useState<Mode>(
+    linkBroken ? 'forgot' : typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('mode') === 'signup' ? 'signup' : 'signin',
+  )
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
