@@ -358,5 +358,9 @@
   "onboarding.s3": "சில நிமிடங்கள் காத்திருங்கள். சுருக்கம், முடிவுகள், செயல்கள், உரைப்பதிவு இங்கே தோன்றும்; அவற்றைத் திருத்தலாம்.",
   "onboarding.record": "என் முதல் கூட்டத்தைப் பதிவு செய்",
   "onboarding.sample": "மாதிரியைப் பார்",
-  "onboarding.dismiss": "மூடு"
+  "onboarding.dismiss": "மூடு",
+
+  "update.ready": "MeetNotes-இன் புதிய பதிப்பு தயாராக உள்ளது.",
+  "update.now": "புதுப்பி",
+  "update.later": "பிறகு"
 }

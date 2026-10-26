@@ -358,5 +358,9 @@
   "onboarding.s3": "Wait a few minutes. The summary, decisions, action items and transcript appear here, and you can edit them.",
   "onboarding.record": "Record my first meeting",
   "onboarding.sample": "Try the sample",
-  "onboarding.dismiss": "Dismiss"
+  "onboarding.dismiss": "Dismiss",
+
+  "update.ready": "A new version of MeetNotes is ready.",
+  "update.now": "Update",
+  "update.later": "Later"
 }

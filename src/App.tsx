@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router-dom'
 import ErrorBoundary from './components/ErrorBoundary'
 import Logo from './components/Logo'
+import UpdateBanner from './components/UpdateBanner'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { useProfile } from './hooks/useProfile'
 import { useI18n } from './i18n/context'
@@ -137,6 +138,7 @@ export default function App() {
         <AuthProvider>
           <Shell />
         </AuthProvider>
+        <UpdateBanner />
       </BrowserRouter>
     </ErrorBoundary>
   )

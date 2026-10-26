@@ -358,5 +358,9 @@
   "onboarding.s3": "कुछ मिनट इंतज़ार करें। सारांश, निर्णय, कार्य और ट्रांसक्रिप्ट यहाँ दिखेंगे, और आप उन्हें बदल सकते हैं।",
   "onboarding.record": "मेरी पहली मीटिंग रिकॉर्ड करें",
   "onboarding.sample": "नमूना देखें",
-  "onboarding.dismiss": "बंद करें"
+  "onboarding.dismiss": "बंद करें",
+
+  "update.ready": "MeetNotes का नया संस्करण तैयार है।",
+  "update.now": "अपडेट करें",
+  "update.later": "बाद में"
 }

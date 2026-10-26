@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt', // the app shows an update bar; it never reloads by itself mid-recording
       includeAssets: [
         'favicon-32.png',
         'apple-touch-icon.png',
