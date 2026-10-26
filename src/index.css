@@ -2,6 +2,11 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Muted text on the lilac background needs a little more contrast than Tailwind's default slate-500 (4.5:1 on #f6f5ff). */
+@theme {
+  --color-slate-500: #586277;
+}
+
 html {
   color-scheme: light;
 }
@@ -11,13 +16,24 @@ html.dark {
 
 body {
   font-family: "Noto Sans", "Noto Sans Devanagari", "Noto Sans Tamil", system-ui, sans-serif;
-  background: #fff;
-  color: #0f172a;
+  background: #f6f5ff;
+  color: #1e1b4b;
   -webkit-text-size-adjust: 100%;
 }
 html.dark body {
-  background: #020617;
-  color: #f1f5f9;
+  background: #0f0d2a;
+  color: #ede9fe;
+}
+
+/* A white (dark: deep indigo) rounded card, the basic surface of the app. */
+.card {
+  background: #fff;
+  border-radius: 1.25rem;
+  box-shadow: 0 1px 3px rgba(49, 46, 129, 0.1);
+}
+html.dark .card {
+  background: #1b1847;
+  box-shadow: none;
 }
 
 /* Indic scripts have tall ascenders/marks; give lines a little more room. */

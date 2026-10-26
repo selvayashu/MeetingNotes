@@ -217,21 +217,22 @@ export default function MeetingDetail() {
   ]
 
   return (
-    <div className={`flex flex-col gap-4 ${hasAudio && done ? 'pb-20' : ''}`}>
+    <div className={`flex flex-col gap-4 ${hasAudio && done ? 'pb-24' : ''}`}>
+      <header className="-mx-4 flex flex-col gap-2 rounded-b-[28px] bg-indigo-700 px-4 pb-6 pt-[max(1rem,env(safe-area-inset-top))] text-white dark:bg-indigo-900">
       <div className="flex items-center justify-between">
-        <Link to="/" className="text-sm text-indigo-600 underline dark:text-indigo-400">{t('detail.back')}</Link>
+        <Link to="/" className="inline-flex min-h-11 items-center text-sm font-semibold text-white underline">{t('detail.back')}</Link>
         {done && (
           <div className="relative">
             <button
               onClick={() => setMenuOpen((o) => !o)}
               aria-expanded={menuOpen}
               aria-haspopup="menu"
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold dark:border-slate-700"
+              className="min-h-10 rounded-full bg-white px-4 py-2 text-sm font-bold text-indigo-900"
             >
               {t('detail.exportShare')}
             </button>
             {menuOpen && (
-              <div role="menu" className="absolute right-0 z-20 mt-1 w-64 rounded-lg border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+              <div role="menu" className="absolute right-0 z-20 mt-1 w-64 rounded-2xl border border-slate-200 bg-white p-2 text-slate-900 shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
                 <label className="flex items-center gap-2 px-2 py-2 text-sm">
                   <input type="checkbox" checked={withTranscript} onChange={(e) => setWithTranscript(e.target.checked)} />
                   {t('detail.includeTranscript')}
@@ -259,19 +260,20 @@ export default function MeetingDetail() {
           onBlur={(e) => void saveTitle(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
           aria-label={t('detail.titleLabel')}
-          className="w-full bg-transparent text-2xl font-bold"
+          className="w-full bg-transparent text-2xl font-extrabold leading-tight text-white"
         />
-        <p className="text-xs text-slate-500 dark:text-slate-400">
+        <p className="text-xs text-indigo-100">
           {new Date(meeting.meeting_date).toLocaleString(lang)} · {t(`lang.${meeting.language}` as TKey)}
           {meeting.duration_seconds != null &&
             ` · ${t('common.minutes', { n: Math.max(1, Math.round(meeting.duration_seconds / 60)) })}`}
         </p>
         {meeting.consent_confirmed_at && (
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-indigo-100">
             {t('consent.confirmedOn', { date: new Date(meeting.consent_confirmed_at).toLocaleDateString(lang) })}
           </p>
         )}
       </div>
+      </header>
 
       {done && (
         <TemplateSelect
@@ -336,17 +338,17 @@ export default function MeetingDetail() {
         </div>
       ) : (
         <>
-          <div role="tablist" className="flex border-b border-slate-200 dark:border-slate-800">
+          <div role="tablist" className="flex gap-2">
             {TABS.map((tb) => (
               <button
                 key={tb.id}
                 role="tab"
                 aria-selected={tab === tb.id}
                 onClick={() => setTab(tb.id)}
-                className={`flex-1 border-b-2 px-2 py-3 text-sm font-semibold ${
+                className={`min-h-11 flex-1 rounded-full px-3 py-2.5 text-sm font-bold ${
                   tab === tb.id
-                    ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
-                    : 'border-transparent text-slate-500 dark:text-slate-400'
+                    ? 'bg-indigo-950 text-white dark:bg-indigo-300 dark:text-indigo-950'
+                    : 'bg-white text-indigo-900 shadow-sm dark:bg-slate-800 dark:text-indigo-100'
                 }`}
               >
                 {t(tb.key)}

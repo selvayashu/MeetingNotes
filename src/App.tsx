@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import ErrorBoundary from './components/ErrorBoundary'
 import Logo from './components/Logo'
 import UpdateBanner from './components/UpdateBanner'
@@ -64,6 +64,7 @@ function Shell() {
   const { user, loading, recovery } = useAuth()
   const { t } = useI18n()
   const online = useOnline()
+  const { pathname } = useLocation()
   const { profile, loading: profileLoading, error: profileError, refresh } = useProfile(user?.id)
   useAdoptProfileLanguage(user?.id)
 
@@ -87,19 +88,29 @@ function Shell() {
     return <PendingApproval status={profile?.status === 'rejected' ? 'rejected' : 'pending'} refresh={refresh} />
   }
 
+  const onDetail = pathname.startsWith('/meeting/')
+  const navItems = [
+    { to: '/', label: t('nav.meetings') },
+    { to: '/insights', label: t('nav.insights') },
+    ...(profile.is_admin ? [{ to: '/admin', label: t('nav.admin') }] : []),
+    { to: '/settings', label: t('nav.settings') },
+  ]
+
   return (
-    <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-4 px-4 pb-24 pt-[max(1.5rem,env(safe-area-inset-top))]">
-      <header className="flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 text-2xl font-bold">
-          <Logo variant="mark" className="h-8 w-auto" />
-          MeetNotes
-        </Link>
-        <nav className="flex items-center gap-4 text-sm text-slate-500 underline dark:text-slate-400">
-          <Link to="/insights">{t('nav.insights')}</Link>
-          {profile.is_admin && <Link to="/admin">{t('nav.admin')}</Link>}
-          <Link to="/settings">{t('nav.settings')}</Link>
-        </nav>
-      </header>
+    <main
+      className={`mx-auto flex min-h-screen max-w-xl flex-col gap-4 px-4 pb-32 ${
+        onDetail ? '' : 'pt-[max(1.5rem,env(safe-area-inset-top))]'
+      }`}
+    >
+      {/* The meeting page has its own coloured header. */}
+      {!onDetail && (
+        <header className="flex items-center">
+          <Link to="/" className="flex items-center gap-2 text-2xl font-bold">
+            <Logo variant="mark" className="h-8 w-auto" />
+            MeetNotes
+          </Link>
+        </header>
+      )}
       {!online && (
         <p role="status" className="rounded-lg bg-amber-100 p-3 text-sm text-amber-900 dark:bg-amber-900/40 dark:text-amber-100">
           {t('common.offline')}
@@ -116,6 +127,27 @@ function Shell() {
         {profile.is_admin && <Route path="/admin/usage" element={<AdminUsage />} />}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <nav
+        aria-label={t('nav.main')}
+        className="card fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-xl gap-1 p-1.5 shadow-lg shadow-indigo-900/15"
+      >
+        {navItems.map((n) => (
+          <NavLink
+            key={n.to}
+            to={n.to}
+            end={n.to === '/'}
+            className={({ isActive }) =>
+              `flex min-h-12 flex-1 items-center justify-center rounded-2xl px-2 text-center text-sm ${
+                isActive
+                  ? 'bg-indigo-100 font-bold text-indigo-900 dark:bg-indigo-900/60 dark:text-indigo-100'
+                  : 'font-semibold text-slate-500 dark:text-slate-300'
+              }`
+            }
+          >
+            {n.label}
+          </NavLink>
+        ))}
+      </nav>
     </main>
   )
 }

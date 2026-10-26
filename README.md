@@ -182,6 +182,18 @@ next visit to the Record page (or a hint on the dashboard) offers **Recover it**
 upload path. The safety copy is deleted once the recording is in the upload queue. At most about a second of audio is lost.
 This relies on the browser's storage (private/incognito windows may refuse it; the app then records without a safety copy).
 
+## Look and feel ("friendly cards")
+
+The interface follows design option C: a soft lilac background (deep indigo in dark mode), white rounded cards, and a floating bottom navigation (Meetings, Insights,
+Settings, plus Admin for admins).
+
+- **Home:** a *Start a new meeting* card with the record button, three tiles for the last 7 days (finished meetings, hours recorded, overdue action items, which links
+  to Insights), then meeting cards with a coloured date badge and a status chip. The old floating record button is gone; recording starts from the card.
+- **Meeting page:** a coloured header holds the back link, title, date and Export/Share; Summary / Actions / Transcript are pill tabs; the audio player floats above the nav.
+- **Shared pieces:** the `.card` class in `src/index.css`; muted text uses a slightly darker slate-500 so it stays above 4.5:1 on the lilac background.
+- **Not restyled yet** (they inherit the new background and work, but still use the older flat style): Insights, Settings, Record, Admin, the sample meeting and the
+  sign-in screens. These are the next pass.
+
 ## Live captions (preview)
 
 On the Record page, **Show live captions while recording (preview)** shows rough text as people talk, in a scrolling box under the recorder. It is **off by default** and

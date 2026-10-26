@@ -10,8 +10,8 @@ export default function AudioBar({ player }: { player: AudioTimeline }) {
   const nextRate = RATES[(RATES.indexOf(rate) + 1) % RATES.length]
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-10 pb-[max(0.5rem,env(safe-area-inset-bottom))] border-t border-slate-200 bg-white/95 px-4 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95">
-      <div className="mx-auto flex max-w-xl items-center gap-3">
+    <div className="card fixed inset-x-4 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-20 mx-auto max-w-xl px-3 py-2 shadow-lg shadow-indigo-900/15">
+      <div className="flex items-center gap-3">
         <button
           onClick={player.toggle}
           disabled={!ready}

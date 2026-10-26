@@ -413,5 +413,13 @@
   "captions.denied": "Live captions are blocked (microphone or speech service not allowed). Recording continues normally.",
   "captions.network": "Live captions need an internet connection and stopped. Recording continues normally.",
   "captions.language": "This browser cannot caption the chosen language. Recording continues normally.",
-  "captions.unavailable": "Live captions stopped working. Recording continues normally."
+  "captions.unavailable": "Live captions stopped working. Recording continues normally.",
+
+  "nav.main": "Main",
+  "nav.meetings": "Meetings",
+  "dashboard.heroTitle": "Start a new meeting",
+  "dashboard.heroHelp": "Choose the language and meeting type, then record. Notes appear a few minutes after you stop.",
+  "dashboard.statMeetings": "Meetings, 7 days",
+  "dashboard.statHours": "Recorded, 7 days",
+  "dashboard.statOverdue": "Overdue actions"
 }
