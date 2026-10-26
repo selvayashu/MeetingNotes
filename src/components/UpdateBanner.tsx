@@ -29,7 +29,7 @@ export default function UpdateBanner() {
             setBusy(true)
             void handle.apply()
           }}
-          className="rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white disabled:opacity-60"
+          className="rounded-full bg-indigo-600 px-4 py-2 font-semibold text-white disabled:opacity-60"
         >
           {t('update.now')}
         </button>

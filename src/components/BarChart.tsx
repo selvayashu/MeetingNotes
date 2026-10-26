@@ -122,7 +122,7 @@ export default function BarChart({ bars, title, unit, limit, table, labels, form
                   {active === i && (
                     <div
                       role="tooltip"
-                      className="pointer-events-none absolute z-10 -translate-x-1/2 whitespace-nowrap rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs shadow-md dark:border-slate-700 dark:bg-slate-900"
+                      className="pointer-events-none absolute z-10 -translate-x-1/2 whitespace-nowrap rounded-2xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs shadow-md dark:border-slate-700 dark:bg-slate-900"
                       style={{ left: i < 2 ? '60%' : i > bars.length - 3 ? '40%' : '50%', bottom: PLOT_BAND + px(b.value) + 10 }}
                     >
                       <div className="flex items-center gap-1.5">

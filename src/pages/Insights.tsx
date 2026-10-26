@@ -115,7 +115,7 @@ export default function Insights() {
   if (!view) return <p className={muted}>{t('common.loading')}</p>
 
   const tile = (label: string, value: string, sub: string | null) => (
-    <div className="flex flex-col gap-0.5 rounded-xl border border-slate-200 p-3 dark:border-slate-800">
+    <div className="flex flex-col gap-0.5 card p-3">
       <p className={`text-xs ${muted}`}>{label}</p>
       <p className="text-2xl font-bold">{value}</p>
       {sub && <p className={`text-[11px] leading-snug ${muted}`}>{sub}</p>}
@@ -151,9 +151,9 @@ export default function Insights() {
       <h2 className="text-xl font-semibold">{t('insights.title')}</h2>
 
       {!view.hasAnything ? (
-        <div className="flex flex-col items-start gap-3 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+        <div className="flex flex-col items-start gap-3 card p-4">
           <p className={muted}>{t('insights.empty')}</p>
-          <Link to="/record" className="rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white">
+          <Link to="/record" className="rounded-full bg-indigo-600 px-4 py-2 font-semibold text-white">
             {t('insights.recordCta')}
           </Link>
         </div>
@@ -181,6 +181,7 @@ export default function Insights() {
               {tile(t('insights.avg'), dur(view.current.avgMinutes), delta(view.current.avgMinutes, view.previous.avgMinutes))}
             </div>
 
+            <div className="card p-4">
             <BarChart
               bars={bars}
               title={t('insights.chartTitle')}
@@ -190,8 +191,9 @@ export default function Insights() {
               labels={{ viewTable: t('usage.viewTable'), viewChart: t('usage.viewChart'), empty: t('usage.empty') }}
               format={fmt}
             />
+            </div>
 
-            <section aria-label={t('insights.actions')} className="flex flex-col gap-3">
+            <section aria-label={t('insights.actions')} className="card flex flex-col gap-3 p-4">
               <h3 className="font-semibold">{t('insights.actions')}</h3>
               <div className="grid grid-cols-3 gap-2">
                 {tile(t('insights.open'), fmt(view.all.open), null)}
@@ -227,7 +229,7 @@ export default function Insights() {
               ) : (
                 <ul className="flex flex-col gap-1.5">
                   {(view.all.overdue as ActionRow[]).slice(0, 8).map((a) => (
-                    <li key={a.id} className="rounded-lg border border-slate-200 p-2.5 text-sm dark:border-slate-800">
+                    <li key={a.id} className="card p-2.5 text-sm">
                       <p className="font-medium">{a.task}</p>
                       <p className={`text-xs ${muted}`}>
                         {a.owner ? `${a.owner} · ` : ''}
@@ -248,7 +250,7 @@ export default function Insights() {
             </section>
 
             {view.load.length > 0 && (
-              <section aria-label={t('insights.workload')}>
+              <section aria-label={t('insights.workload')} className="card p-4">
                 <h3 className="mb-2 font-semibold">{t('insights.workload')}</h3>
                 <table className="w-full text-sm">
                   <thead>
@@ -273,7 +275,7 @@ export default function Insights() {
               </section>
             )}
 
-            <section aria-label={t('insights.topics')}>
+            <section aria-label={t('insights.topics')} className="card p-4">
               <h3 className="font-semibold">{t('insights.topics')}</h3>
               <p className={`mb-2 text-xs ${muted}`}>{t('insights.topicsHelp')}</p>
               {view.topics.length === 0 ? (

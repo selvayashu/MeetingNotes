@@ -280,41 +280,41 @@ export default function MeetingDetail() {
           value={isTemplate(meeting.template) ? meeting.template : 'general'}
           onChange={(id) => void saveTemplateChoice(id)}
           disabled={!!running}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900"
+          className="rounded-2xl border border-slate-200 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900"
         />
       )}
 
       {flash && (
-        <p role="status" className="rounded-lg bg-emerald-100 p-2 text-sm text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-100">
+        <p role="status" className="rounded-2xl bg-emerald-100 p-2 text-sm text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-100">
           {flash}
         </p>
       )}
       {actionError && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{actionError}</p>}
 
       {done && running && (
-        <p role="status" className="rounded-lg bg-indigo-50 p-3 text-sm text-indigo-900 dark:bg-indigo-950 dark:text-indigo-100">
+        <p role="status" className="rounded-2xl bg-indigo-50 p-3 text-sm text-indigo-900 dark:bg-indigo-950 dark:text-indigo-100">
           {running}
         </p>
       )}
       {typeChanged && !staleNotes && !running && (
-        <div role="status" className="flex flex-col gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-100">
+        <div role="status" className="flex flex-col gap-2 rounded-2xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-100">
           <p>{t('template.changedBanner')}</p>
-          <button onClick={updateNotes} className="self-start rounded-lg bg-amber-600 px-3 py-2 font-semibold text-white">
+          <button onClick={updateNotes} className="self-start rounded-full bg-amber-600 px-3 py-2 font-semibold text-white">
             {t('notesStale.update')}
           </button>
         </div>
       )}
       {staleNotes && !running && (
-        <div role="status" className="flex flex-col gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-100">
+        <div role="status" className="flex flex-col gap-2 rounded-2xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-100">
           <p>{t('notesStale.banner')}</p>
-          <button onClick={updateNotes} className="self-start rounded-lg bg-amber-600 px-3 py-2 font-semibold text-white">
+          <button onClick={updateNotes} className="self-start rounded-full bg-amber-600 px-3 py-2 font-semibold text-white">
             {t('notesStale.update')}
           </button>
         </div>
       )}
 
       {!done ? (
-        <div className="flex flex-col items-start gap-2 rounded-lg border border-slate-200 p-4 dark:border-slate-800">
+        <div className="flex flex-col items-start gap-2 card p-4">
           <p>
             {t('detail.status')}: <b>{t(`status.${meeting.status}` as TKey)}</b>
           </p>
@@ -326,7 +326,7 @@ export default function MeetingDetail() {
           ) : (
             <>
               {inProgress && <p className="text-sm text-slate-500 dark:text-slate-400">{t('detail.backgroundNote')}</p>}
-              <button onClick={run} className="rounded-lg bg-indigo-600 px-4 py-2.5 font-semibold text-white">
+              <button onClick={run} className="rounded-full bg-indigo-600 px-4 py-2.5 font-semibold text-white">
                 {meeting.status === 'failed'
                   ? t('common.retry')
                   : meeting.status === 'uploaded'

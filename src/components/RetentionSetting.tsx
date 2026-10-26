@@ -11,7 +11,7 @@ interface Props {
   overridden: boolean
 }
 
-const cls = 'rounded-lg border border-slate-300 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900'
+const cls = 'rounded-2xl border border-slate-200 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900'
 
 /** Settings: how long recordings are kept. */
 export default function RetentionSetting({ value, onChange, overridden }: Props) {

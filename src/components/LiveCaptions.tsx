@@ -51,7 +51,7 @@ export default function LiveCaptions({ supported, enabled, onToggle, recording, 
       </label>
 
       {enabled && recording && (
-        <section aria-label={t('captions.title')} className="flex flex-col gap-1 rounded-lg border border-slate-200 p-3 dark:border-slate-800">
+        <section aria-label={t('captions.title')} className="flex flex-col gap-1 card p-3">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{t('captions.title')}</h3>
           {/* aria-live is off on purpose: speech would flood a screen reader. */}
           <div ref={box} role="log" aria-live="off" aria-label={t('captions.title')} className="max-h-40 overflow-y-auto text-base leading-relaxed">

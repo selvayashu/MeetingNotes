@@ -35,6 +35,14 @@ html.dark .card {
   background: #1b1847;
   box-shadow: none;
 }
+/* A card inside a card is a tinted tile, not another white sheet. */
+.card .card {
+  background: #f6f5ff;
+  box-shadow: none;
+}
+html.dark .card .card {
+  background: #25216a;
+}
 
 /* Indic scripts have tall ascenders/marks; give lines a little more room. */
 html[lang="hi"] body,

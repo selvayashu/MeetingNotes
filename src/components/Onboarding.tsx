@@ -28,7 +28,7 @@ export default function Onboarding({ userId }: { userId: string }) {
   }
 
   return (
-    <section aria-label={t('onboarding.title')} className="flex flex-col gap-3 rounded-xl border border-indigo-200 bg-indigo-50 p-4 dark:border-indigo-900 dark:bg-indigo-950/40">
+    <section aria-label={t('onboarding.title')} className="flex flex-col gap-3 rounded-3xl border border-indigo-200 bg-indigo-50 p-5 dark:border-indigo-900 dark:bg-indigo-950/40">
       <h3 className="text-lg font-semibold">{t('onboarding.title')}</h3>
       <p className="text-sm">{t('onboarding.intro')}</p>
       <ol className="list-decimal space-y-1 pl-5 text-sm">
@@ -37,10 +37,10 @@ export default function Onboarding({ userId }: { userId: string }) {
         <li>{t('onboarding.s3')}</li>
       </ol>
       <div className="flex flex-wrap items-center gap-2">
-        <Link to="/record" className="rounded-lg bg-indigo-600 px-4 py-2.5 font-semibold text-white">
+        <Link to="/record" className="rounded-full bg-indigo-600 px-4 py-2.5 font-semibold text-white">
           {t('onboarding.record')}
         </Link>
-        <Link to="/sample" className="rounded-lg border border-slate-300 px-4 py-2.5 font-semibold dark:border-slate-600">
+        <Link to="/sample" className="rounded-2xl border border-slate-200 px-4 py-2.5 font-semibold dark:border-slate-600">
           {t('onboarding.sample')}
         </Link>
         <button onClick={dismiss} className="ml-auto py-2 text-sm text-slate-500 underline dark:text-slate-400">

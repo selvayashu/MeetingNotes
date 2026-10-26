@@ -32,15 +32,15 @@ function ChangePassword() {
     setMsg({ key: 'settings.passwordChanged', error: false })
   }
 
-  const box = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900'
+  const box = 'w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900'
   return (
-    <form onSubmit={submit} className="flex flex-col gap-2 border-t border-slate-200 pt-4 dark:border-slate-800">
+    <form onSubmit={submit} className="flex flex-col gap-2 card p-4">
       <h3 className="font-medium">{t('settings.changePassword')}</h3>
       <input type="password" required autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)}
         placeholder={t('resetpw.new')} aria-label={t('resetpw.new')} className={box} />
       <input type="password" required autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)}
         placeholder={t('resetpw.confirm')} aria-label={t('resetpw.confirm')} className={box} />
-      <button disabled={busy} className="self-start rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white disabled:opacity-60">
+      <button disabled={busy} className="self-start rounded-full bg-indigo-600 px-4 py-2 font-semibold text-white disabled:opacity-60">
         {busy ? t('common.saving') : t('settings.changePassword')}
       </button>
       {msg && (
@@ -96,7 +96,7 @@ export default function Settings() {
     void saveProfile({ preferred_language: l })
   }
 
-  const box = 'rounded-lg border border-slate-300 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900'
+  const box = 'rounded-2xl border border-slate-200 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900'
 
   return (
     <div className="flex flex-col gap-6">
@@ -107,6 +107,7 @@ export default function Settings() {
         </Link>
       </div>
 
+      <div className="card flex flex-col gap-4 p-4">
       <label className="flex flex-col gap-1">
         <span className="font-medium">{t('settings.language')}</span>
         <select value={lang} onChange={(e) => onLang(e.target.value as UiLang)} className={box}>
@@ -124,7 +125,7 @@ export default function Settings() {
           {THEMES.map((p) => (
             <label
               key={p}
-              className={`cursor-pointer rounded-lg border px-2 py-2.5 text-center text-sm ${
+              className={`cursor-pointer rounded-2xl border px-2 py-2.5 text-center text-sm ${
                 pref === p
                   ? 'border-indigo-600 bg-indigo-50 font-semibold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300'
                   : 'border-slate-300 dark:border-slate-700'
@@ -136,6 +137,9 @@ export default function Settings() {
           ))}
         </div>
       </fieldset>
+      </div>
+
+      <div className="card flex flex-col gap-4 p-4">
 
       <label className="flex items-start gap-3">
         <input
@@ -152,6 +156,7 @@ export default function Settings() {
       </label>
 
       <RetentionSetting value={retention} onChange={(v) => void onRetention(v)} overridden={deleteAudio === true} />
+      </div>
 
       {msg && (
         <p role={msg.error ? 'alert' : 'status'} className={`text-sm ${msg.error ? 'text-red-600' : 'text-emerald-700 dark:text-emerald-400'}`}>
@@ -163,11 +168,11 @@ export default function Settings() {
 
       <DataSection />
 
-      <div className="flex items-center justify-between gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
+      <div className="flex items-center justify-between gap-3 card p-4">
         <p className="min-w-0 truncate text-sm text-slate-500 dark:text-slate-400">
           {t('settings.account', { email: user?.email ?? '' })}
         </p>
-        <button onClick={signOut} className="shrink-0 rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-semibold dark:border-slate-700">
+        <button onClick={signOut} className="shrink-0 rounded-2xl border border-slate-200 px-3 py-1.5 text-sm font-semibold dark:border-slate-700">
           {t('nav.signOut')}
         </button>
       </div>

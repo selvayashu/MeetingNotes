@@ -52,17 +52,17 @@ export default function SummaryTab({ meetingId, notes, onSaved }: Props) {
               onChange={(e) => setDraft(e.target.value)}
               rows={8}
               aria-label={t('summary.title')}
-              className="w-full rounded-lg border border-slate-300 bg-white p-3 dark:border-slate-700 dark:bg-slate-900"
+              className="w-full rounded-2xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900"
             />
             <div className="flex gap-2">
               <button
                 onClick={save}
                 disabled={busy || !draft.trim()}
-                className="rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white disabled:opacity-60"
+                className="rounded-full bg-indigo-600 px-4 py-2 font-semibold text-white disabled:opacity-60"
               >
                 {busy ? t('common.saving') : t('common.save')}
               </button>
-              <button onClick={() => setEditing(false)} className="rounded-lg border border-slate-300 px-4 py-2 dark:border-slate-700">
+              <button onClick={() => setEditing(false)} className="rounded-2xl border border-slate-200 px-4 py-2 dark:border-slate-700">
                 {t('common.cancel')}
               </button>
             </div>

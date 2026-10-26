@@ -56,7 +56,7 @@ export default function ActionItemsTab({ meetingId, items, onChange }: Props) {
       {items.length === 0 && <p className="text-slate-500 dark:text-slate-400">{t('actions.none')}</p>}
       <ul className="flex flex-col gap-3">
         {items.map((i) => (
-          <li key={i.id} className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
+          <li key={i.id} className="card p-3">
             <div className="flex items-start gap-3">
               <input
                 type="checkbox"
@@ -114,9 +114,9 @@ export default function ActionItemsTab({ meetingId, items, onChange }: Props) {
           onChange={(e) => setNewTask(e.target.value)}
           placeholder={t('actions.new')}
           aria-label={t('actions.new')}
-          className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900"
+          className="min-w-0 flex-1 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900"
         />
-        <button disabled={!newTask.trim()} className="rounded-lg bg-indigo-600 px-4 font-semibold text-white disabled:opacity-50">
+        <button disabled={!newTask.trim()} className="rounded-full bg-indigo-600 px-4 font-semibold text-white disabled:opacity-50">
           {t('common.add')}
         </button>
       </form>

@@ -48,7 +48,7 @@ export default function Admin() {
     await load()
   }
 
-  const btn = 'rounded-lg px-3 py-2 text-sm font-semibold disabled:opacity-60'
+  const btn = 'rounded-2xl px-3 py-2 text-sm font-semibold disabled:opacity-60'
 
   return (
     <div className="flex flex-col gap-6">
@@ -66,7 +66,7 @@ export default function Admin() {
         SECTIONS.map(({ status, title }) => {
           const rows = users.filter((u) => u.status === status)
           return (
-            <section key={status} aria-label={t(title)}>
+            <section key={status} aria-label={t(title)} className="card p-4">
               <h3 className="mb-2 font-semibold">
                 {t(title)} <span className="text-slate-500 dark:text-slate-400">({rows.length})</span>
               </h3>
@@ -75,7 +75,7 @@ export default function Admin() {
               ) : (
                 <ul className="flex flex-col gap-2">
                   {rows.map((u) => (
-                    <li key={u.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-slate-200 p-3 dark:border-slate-800">
+                    <li key={u.id} className="flex flex-wrap items-center gap-3 card p-3">
                       <div className="min-w-0 flex-1">
                         {u.full_name && <p className="truncate font-medium">{u.full_name}</p>}
                         <p className={`truncate ${u.full_name ? 'text-sm text-slate-600 dark:text-slate-300' : 'font-medium'}`}>

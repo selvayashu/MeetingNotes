@@ -182,7 +182,7 @@ export default function Dashboard() {
         </div>
       )}
       {lostRecording && (
-        <p className="flex items-center justify-between gap-3 rounded-lg bg-amber-100 p-3 text-sm text-amber-900 dark:bg-amber-900/40 dark:text-amber-100">
+        <p className="flex items-center justify-between gap-3 rounded-2xl bg-amber-100 p-3 text-sm text-amber-900 dark:bg-amber-900/40 dark:text-amber-100">
           <span>{t('draft.dashboardHint')}</span>
           <Link to="/record" className="shrink-0 font-semibold underline">
             {t('draft.open')}
@@ -190,7 +190,7 @@ export default function Dashboard() {
         </p>
       )}
       {pending > 0 && (
-        <p className="rounded-lg bg-amber-100 p-3 text-sm text-amber-900 dark:bg-amber-900/40 dark:text-amber-100">
+        <p className="rounded-2xl bg-amber-100 p-3 text-sm text-amber-900 dark:bg-amber-900/40 dark:text-amber-100">
           {t(pending > 1 ? 'dashboard.pendingMany' : 'dashboard.pendingOne', { n: pending })}
         </p>
       )}

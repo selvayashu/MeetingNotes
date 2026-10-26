@@ -123,7 +123,7 @@ export default function TranscriptTab({ segments, currentMs, playing, canSeek, o
 
   if (segments.length === 0) return <p className="text-slate-500 dark:text-slate-400">{t('transcript.none')}</p>
 
-  const small = 'rounded-lg px-3 py-2 text-sm font-semibold disabled:opacity-60'
+  const small = 'rounded-2xl px-3 py-2 text-sm font-semibold disabled:opacity-60'
   return (
     <div className="flex flex-col gap-3">
       <input
@@ -135,7 +135,7 @@ export default function TranscriptTab({ segments, currentMs, playing, canSeek, o
         }}
         placeholder={t('transcript.search')}
         aria-label={t('transcript.search')}
-        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900"
+        className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900"
       />
       {q && (
         <div className="flex flex-col gap-2">
@@ -149,7 +149,7 @@ export default function TranscriptTab({ segments, currentMs, playing, canSeek, o
                 onChange={(e) => setReplacement(e.target.value)}
                 placeholder={t('tedit.replaceWith')}
                 aria-label={t('tedit.replaceWith')}
-                className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900"
+                className="min-w-0 flex-1 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900"
               />
               <button
                 onClick={replaceAll}
@@ -175,7 +175,7 @@ export default function TranscriptTab({ segments, currentMs, playing, canSeek, o
           return (
             <li key={s.id} ref={isActive ? activeRef : undefined}>
               {editing ? (
-                <div className="flex flex-col gap-2 rounded-lg border border-indigo-300 p-2 dark:border-indigo-700">
+                <div className="flex flex-col gap-2 rounded-2xl border border-indigo-300 p-2 dark:border-indigo-700">
                   <span className="text-xs tabular-nums text-indigo-600 dark:text-indigo-400">{formatTimestamp(s.start_ms)}</span>
                   <textarea
                     autoFocus
@@ -187,7 +187,7 @@ export default function TranscriptTab({ segments, currentMs, playing, canSeek, o
                       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) void submit(s, draft)
                     }}
                     aria-label={t('tedit.edit')}
-                    className="w-full rounded-lg border border-slate-300 bg-white p-2 dark:border-slate-700 dark:bg-slate-900"
+                    className="w-full rounded-2xl border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-900"
                   />
                   {s.original_text && (
                     <p className="text-xs text-slate-500 dark:text-slate-400">{t('tedit.original', { text: s.original_text })}</p>
@@ -213,11 +213,11 @@ export default function TranscriptTab({ segments, currentMs, playing, canSeek, o
                   {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
                 </div>
               ) : (
-                <div className={`flex items-start rounded-lg ${isActive ? 'bg-indigo-50 dark:bg-indigo-950' : ''}`}>
+                <div className={`flex items-start rounded-2xl ${isActive ? 'bg-indigo-50 dark:bg-indigo-950' : ''}`}>
                   <button
                     onClick={() => onSeek(s.start_ms)}
                     disabled={!canSeek}
-                    className={`flex min-w-0 flex-1 gap-3 rounded-lg px-2 py-2 text-left disabled:cursor-default ${
+                    className={`flex min-w-0 flex-1 gap-3 rounded-2xl px-2 py-2 text-left disabled:cursor-default ${
                       !isActive && canSeek ? 'hover:bg-slate-100 dark:hover:bg-slate-900' : ''
                     }`}
                   >

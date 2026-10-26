@@ -32,7 +32,7 @@ export default function Sample() {
 
   const body = (
     <div className="flex flex-col gap-4">
-      <p role="note" className="rounded-lg bg-amber-100 p-3 text-sm text-amber-900 dark:bg-amber-900/40 dark:text-amber-100">
+      <p role="note" className="rounded-2xl bg-amber-100 p-3 text-sm text-amber-900 dark:bg-amber-900/40 dark:text-amber-100">
         {t('sample.banner')}
       </p>
       <div>
@@ -40,17 +40,17 @@ export default function Sample() {
         <p className="text-sm text-slate-500 dark:text-slate-400">{t('sample.meta')}</p>
       </div>
 
-      <div role="tablist" className="flex border-b border-slate-200 dark:border-slate-800">
+      <div role="tablist" className="flex gap-2">
         {TABS.map((tb) => (
           <button
             key={tb.id}
             role="tab"
             aria-selected={tab === tb.id}
             onClick={() => setTab(tb.id)}
-            className={`flex-1 border-b-2 px-2 py-3 text-sm font-semibold ${
+            className={`min-h-11 flex-1 rounded-full px-3 py-2.5 text-sm font-bold ${
               tab === tb.id
-                ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
-                : 'border-transparent text-slate-500 dark:text-slate-400'
+                ? 'bg-indigo-950 text-white dark:bg-indigo-300 dark:text-indigo-950'
+                : 'bg-white text-indigo-900 shadow-sm dark:bg-slate-800 dark:text-indigo-100'
             }`}
           >
             {t(tb.key)}
@@ -58,7 +58,7 @@ export default function Sample() {
         ))}
       </div>
 
-      <div role="tabpanel" className="flex flex-col gap-5">
+      <div role="tabpanel" className="card flex flex-col gap-5 p-4">
         {tab === 'summary' && (
           <>
             <section>
@@ -78,7 +78,7 @@ export default function Sample() {
         {tab === 'actions' && (
           <ul className="flex flex-col gap-2">
             {ACTIONS.map((a) => (
-              <li key={a.task} className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
+              <li key={a.task} className="card p-3">
                 <p className="font-medium">{t(a.task)}</p>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
                   {t('actions.owner')}: {t(a.owner)} · {t('actions.due')}: {t(a.due)}
@@ -99,11 +99,11 @@ export default function Sample() {
         )}
       </div>
 
-      <div className="flex flex-col gap-2 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+      <div className="flex flex-col gap-2 card p-4">
         <p className="font-semibold">{user ? t('sample.ctaSignedIn') : t('sample.cta')}</p>
         <Link
           to={user ? '/record' : '/login?mode=signup'}
-          className="rounded-lg bg-indigo-600 px-4 py-3 text-center font-semibold text-white"
+          className="rounded-full bg-indigo-600 px-4 py-3 text-center font-semibold text-white"
         >
           {user ? t('onboarding.record') : t('landing.getStarted')}
         </Link>

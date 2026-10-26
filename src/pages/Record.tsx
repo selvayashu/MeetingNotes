@@ -23,7 +23,7 @@ import type { Lang } from '../lib/types'
 import { submitRecording } from '../lib/upload'
 
 const fieldCls =
-  'w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-base dark:border-slate-700 dark:bg-slate-900'
+  'w-full rounded-2xl border border-slate-200 bg-white px-3 py-3 text-base dark:border-slate-700 dark:bg-slate-900'
 
 export default function Record() {
   const { user } = useAuth()
@@ -116,7 +116,7 @@ export default function Record() {
       {lost && !active && !hasAudio && (
         <div
           role="status"
-          className="flex flex-col gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-100"
+          className="flex flex-col gap-2 rounded-2xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-100"
         >
           <p>
             {t('draft.found', {
@@ -130,7 +130,7 @@ export default function Record() {
                 setRecovered({ draftId: lost.draft.id, parts: await loadDraftParts(lost.draft.id) })
                 void refreshLost()
               }}
-              className="rounded-lg bg-amber-600 px-3 py-2 font-semibold text-white"
+              className="rounded-full bg-amber-600 px-3 py-2 font-semibold text-white"
             >
               {t('draft.recover')}
             </button>
@@ -139,7 +139,7 @@ export default function Record() {
                 await deleteDraft(lost.draft.id)
                 void refreshLost()
               }}
-              className="rounded-lg border border-amber-400 px-3 py-2 dark:border-amber-600"
+              className="rounded-2xl border border-amber-400 px-3 py-2 dark:border-amber-600"
             >
               {t('common.discard')}
             </button>
@@ -233,7 +233,7 @@ export default function Record() {
         </button>
       </section>
 
-      <section className="flex flex-col items-center gap-4 rounded-2xl border border-slate-200 p-6 dark:border-slate-800">
+      <section className="flex flex-col items-center gap-4 card p-6">
         {active && (
           <p role="status" className="flex items-center gap-2 text-sm font-semibold text-red-600 dark:text-red-400">
             <span aria-hidden className="animate-pulse">●</span>
@@ -321,14 +321,14 @@ export default function Record() {
               if (recovered) void deleteDraft(recovered.draftId)
               setRecovered(null)
             }}
-            className="rounded-lg border border-slate-300 px-4 py-3 dark:border-slate-700"
+            className="rounded-2xl border border-slate-200 px-4 py-3 dark:border-slate-700"
           >
             {t('common.discard')}
           </button>
           <button
             onClick={save}
             disabled={busy || !consent}
-            className="flex-1 rounded-lg bg-indigo-600 px-4 py-3 font-semibold text-white disabled:opacity-60"
+            className="flex-1 rounded-full bg-indigo-600 px-4 py-3 font-semibold text-white disabled:opacity-60"
           >
             {busy ? t('record.saving') : t('record.save')}
           </button>

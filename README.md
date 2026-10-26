@@ -191,8 +191,8 @@ Settings, plus Admin for admins).
   to Insights), then meeting cards with a coloured date badge and a status chip. The old floating record button is gone; recording starts from the card.
 - **Meeting page:** a coloured header holds the back link, title, date and Export/Share; Summary / Actions / Transcript are pill tabs; the audio player floats above the nav.
 - **Shared pieces:** the `.card` class in `src/index.css`; muted text uses a slightly darker slate-500 so it stays above 4.5:1 on the lilac background.
-- **Not restyled yet** (they inherit the new background and work, but still use the older flat style): Insights, Settings, Record, Admin, the sample meeting and the
-  sign-in screens. These are the next pass.
+- **Second pass:** Settings is grouped into cards (language and appearance; audio; password; your data), Insights sections are cards with tinted tiles inside them, Record, Admin and the
+  sample use the same cards, sign-in and the landing page use pill tabs and a card around the form, and buttons are pills. A card inside a card is a tinted tile, not another white sheet.
 
 ## Live captions (preview)
 

@@ -8,7 +8,7 @@ import { isStrongEnough } from '../lib/password'
 import { supabase } from '../lib/supabase'
 
 const inputCls =
-  'w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-base dark:border-slate-700 dark:bg-slate-900'
+  'w-full rounded-2xl border border-slate-200 bg-white px-3 py-3 text-base dark:border-slate-700 dark:bg-slate-900'
 
 /** Shown after the user opens the link from the "reset password" e-mail. */
 export default function ResetPassword() {
@@ -38,10 +38,10 @@ export default function ResetPassword() {
       <h1 className="text-2xl font-bold">{t('resetpw.title')}</h1>
       {done ? (
         <>
-          <p role="status" className="rounded-lg bg-emerald-100 p-3 text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-100">
+          <p role="status" className="rounded-2xl bg-emerald-100 p-3 text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-100">
             {t('resetpw.done')}
           </p>
-          <button onClick={clearRecovery} className="rounded-lg bg-indigo-600 px-4 py-3 font-semibold text-white">
+          <button onClick={clearRecovery} className="rounded-full bg-indigo-600 px-4 py-3 font-semibold text-white">
             {t('login.tabSignIn')}
           </button>
         </>
@@ -68,7 +68,7 @@ export default function ResetPassword() {
             className={inputCls}
           />
           <p className="text-xs text-slate-500 dark:text-slate-400">{t('password.rules')}</p>
-          <button disabled={busy} className="rounded-lg bg-indigo-600 px-4 py-3 font-semibold text-white disabled:opacity-60">
+          <button disabled={busy} className="rounded-full bg-indigo-600 px-4 py-3 font-semibold text-white disabled:opacity-60">
             {busy ? t('resetpw.saving') : t('resetpw.save')}
           </button>
           {error && (

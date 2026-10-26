@@ -76,10 +76,10 @@ export default function DataSection() {
   }
 
   const matches = typed.trim().toLowerCase() === email.toLowerCase() && email !== ''
-  const box = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900'
+  const box = 'w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900'
 
   return (
-    <section aria-label={t('data.title')} className="flex flex-col gap-5 border-t border-slate-200 pt-4 dark:border-slate-800">
+    <section aria-label={t('data.title')} className="flex flex-col gap-5 card p-4">
       <h3 className="font-medium">{t('data.title')}</h3>
 
       <div className="flex flex-col gap-2">
@@ -91,7 +91,7 @@ export default function DataSection() {
         <button
           onClick={() => void onExport()}
           disabled={exporting}
-          className="self-start rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white disabled:opacity-60"
+          className="self-start rounded-full bg-indigo-600 px-4 py-2 font-semibold text-white disabled:opacity-60"
         >
           {exporting ? t('data.exporting') : t('data.export')}
         </button>
@@ -129,7 +129,7 @@ export default function DataSection() {
         <button
           onClick={() => void onDelete()}
           disabled={!matches || deleting}
-          className="self-start rounded-lg bg-red-600 px-4 py-2 font-semibold text-white disabled:opacity-50"
+          className="self-start rounded-full bg-red-600 px-4 py-2 font-semibold text-white disabled:opacity-50"
         >
           {deleting ? t('data.deleting') : t('data.delete')}
         </button>

@@ -164,7 +164,7 @@ export default function AdminUsage() {
       </div>
 
       <div className={`flex flex-col gap-6 transition-opacity ${loading ? 'opacity-60' : ''}`}>
-        <section aria-label={t('usage.today')} className="flex flex-col gap-2 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+        <section aria-label={t('usage.today')} className="flex flex-col gap-2 card p-4">
           <p className="text-sm text-slate-500 dark:text-slate-400">{t('usage.today')}</p>
           <p className="text-4xl font-bold">
             {capped ? t('usage.usedOf', { used: fmt(Math.round(overview.used)), cap: fmt(overview.cap) }) : t('usage.noCap', { used: fmt(Math.round(overview.used)) })}
@@ -200,7 +200,7 @@ export default function AdminUsage() {
           format={fmt}
         />
 
-        <section aria-label={t('usage.byUser')}>
+        <section aria-label={t('usage.byUser')} className="card p-4">
           <h3 className="mb-2 font-semibold">{t('usage.byUser')}</h3>
           {users.length === 0 ? (
             <p className="text-sm text-slate-500 dark:text-slate-400">{t('usage.empty')}</p>
@@ -230,7 +230,7 @@ export default function AdminUsage() {
           )}
         </section>
 
-        <form onSubmit={saveCap} className="flex flex-col gap-2 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+        <form onSubmit={saveCap} className="flex flex-col gap-2 card p-4">
           <label htmlFor="ai-cap" className="font-semibold">{t('usage.setCap')}</label>
           <div className="flex gap-2">
             <input
@@ -241,9 +241,9 @@ export default function AdminUsage() {
               step={100}
               value={capInput}
               onChange={(e) => setCapInput(e.target.value)}
-              className="w-40 rounded-lg border border-slate-300 bg-white px-3 py-2 tabular-nums dark:border-slate-700 dark:bg-slate-900"
+              className="w-40 rounded-2xl border border-slate-200 bg-white px-3 py-2 tabular-nums dark:border-slate-700 dark:bg-slate-900"
             />
-            <button className="rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white">{t('common.save')}</button>
+            <button className="rounded-full bg-indigo-600 px-4 py-2 font-semibold text-white">{t('common.save')}</button>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400">{t('usage.capHelp')}</p>
           {msg && (

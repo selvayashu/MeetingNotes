@@ -31,12 +31,12 @@ export default function PendingApproval({ status, refresh }: Props) {
               await refresh()
               setBusy(false)
             }}
-            className="rounded-lg bg-indigo-600 px-4 py-3 font-semibold text-white disabled:opacity-60"
+            className="rounded-full bg-indigo-600 px-4 py-3 font-semibold text-white disabled:opacity-60"
           >
             {busy ? t('approval.checking') : t('approval.check')}
           </button>
         )}
-        <button onClick={signOut} className="rounded-lg border border-slate-300 px-4 py-3 dark:border-slate-700">
+        <button onClick={signOut} className="rounded-2xl border border-slate-200 px-4 py-3 dark:border-slate-700">
           {t('nav.signOut')}
         </button>
       </div>

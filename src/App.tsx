@@ -112,7 +112,7 @@ function Shell() {
         </header>
       )}
       {!online && (
-        <p role="status" className="rounded-lg bg-amber-100 p-3 text-sm text-amber-900 dark:bg-amber-900/40 dark:text-amber-100">
+        <p role="status" className="rounded-2xl bg-amber-100 p-3 text-sm text-amber-900 dark:bg-amber-900/40 dark:text-amber-100">
           {t('common.offline')}
         </p>
       )}

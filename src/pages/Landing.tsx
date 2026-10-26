@@ -11,8 +11,8 @@ const BENEFITS: { title: TKey; body: TKey }[] = [
   { title: 'landing.b4.title', body: 'landing.b4.body' },
 ]
 
-const primary = 'rounded-lg bg-indigo-600 px-5 py-3 text-center font-semibold text-white'
-const secondary = 'rounded-lg border border-slate-300 px-5 py-3 text-center font-semibold dark:border-slate-700'
+const primary = 'rounded-full bg-indigo-600 px-5 py-3 text-center font-semibold text-white'
+const secondary = 'rounded-2xl border border-slate-200 px-5 py-3 text-center font-semibold dark:border-slate-700'
 
 /** Public front page for signed-out visitors. */
 export default function Landing() {
@@ -48,7 +48,7 @@ export default function Landing() {
 
       <section aria-label={t('landing.tagline')} className="grid gap-3">
         {BENEFITS.map((b) => (
-          <div key={b.title} className="rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+          <div key={b.title} className="card p-4">
             <h2 className="font-semibold">{t(b.title)}</h2>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{t(b.body)}</p>
           </div>

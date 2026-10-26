@@ -9,9 +9,9 @@ import { supabase } from '../lib/supabase'
 type Mode = 'signin' | 'signup' | 'forgot'
 
 const inputCls =
-  'w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-base dark:border-slate-700 dark:bg-slate-900'
+  'w-full rounded-2xl border border-slate-200 bg-white px-3 py-3 text-base dark:border-slate-700 dark:bg-slate-900'
 const btnCls =
-  'w-full rounded-lg bg-indigo-600 px-4 py-3 font-semibold text-white disabled:opacity-60'
+  'w-full rounded-full bg-indigo-600 px-4 py-3 font-semibold text-white disabled:opacity-60'
 
 export default function Login() {
   const { t, lang, setLang } = useI18n()
@@ -83,10 +83,10 @@ export default function Login() {
       role="tab"
       aria-selected={mode === m}
       onClick={() => switchMode(m)}
-      className={`flex-1 border-b-2 px-2 py-3 text-sm font-semibold ${
+      className={`min-h-11 flex-1 rounded-full px-3 py-2.5 text-sm font-bold ${
         mode === m
-          ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
-          : 'border-transparent text-slate-500 dark:text-slate-400'
+          ? 'bg-indigo-950 text-white dark:bg-indigo-300 dark:text-indigo-950'
+          : 'bg-white text-indigo-900 shadow-sm dark:bg-slate-800 dark:text-indigo-100'
       }`}
     >
       {t(label)}
@@ -102,7 +102,7 @@ export default function Login() {
           value={lang}
           onChange={(e) => setLang(e.target.value as UiLang)}
           aria-label="Language"
-          className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900"
+          className="rounded-2xl border border-slate-200 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900"
         >
           {UI_LANGS.map((l) => (
             <option key={l.code} value={l.code}>
@@ -114,7 +114,7 @@ export default function Login() {
       <p className="text-slate-500 dark:text-slate-400">{t('login.subtitle')}</p>
 
       {mode !== 'forgot' ? (
-        <div role="tablist" className="flex border-b border-slate-200 dark:border-slate-800">
+        <div role="tablist" className="flex gap-2">
           {tab('signin', 'login.tabSignIn')}
           {tab('signup', 'login.signUp')}
         </div>
@@ -125,7 +125,7 @@ export default function Login() {
         </div>
       )}
 
-      <form onSubmit={submit} className="flex flex-col gap-3">
+      <form onSubmit={submit} className="card flex flex-col gap-3 p-5">
         {mode === 'signup' && (
           <input
             type="text"
@@ -177,7 +177,7 @@ export default function Login() {
       </form>
 
       {mode === 'signup' && (
-        <p className="rounded-lg bg-slate-100 p-3 text-sm dark:bg-slate-900">{t('login.approvalNote')}</p>
+        <p className="rounded-2xl bg-slate-100 p-3 text-sm dark:bg-slate-900">{t('login.approvalNote')}</p>
       )}
       {mode === 'signin' && (
         <button type="button" onClick={() => switchMode('forgot')} className="self-start py-1 text-sm text-indigo-600 underline dark:text-indigo-400">
@@ -191,7 +191,7 @@ export default function Login() {
       )}
 
       {notice && (
-        <p role="status" className="rounded-lg bg-emerald-100 p-3 text-sm text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-100">
+        <p role="status" className="rounded-2xl bg-emerald-100 p-3 text-sm text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-100">
           {t(notice)}
         </p>
       )}

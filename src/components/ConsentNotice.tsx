@@ -70,10 +70,10 @@ export default function ConsentNotice({ initialLang, onClose }: Props) {
       </p>
 
       <div className="flex gap-3">
-        <button onClick={copy} className="rounded-lg border border-slate-500 px-4 py-3 font-semibold">
+        <button onClick={copy} className="rounded-2xl border border-slate-500 px-4 py-3 font-semibold">
           {copied ? say('consent.copied') : say('consent.copy')}
         </button>
-        <button ref={closeRef} onClick={onClose} className="rounded-lg bg-white px-5 py-3 font-semibold text-slate-950">
+        <button ref={closeRef} onClick={onClose} className="rounded-2xl bg-white px-5 py-3 font-semibold text-slate-950">
           {say('consent.close')}
         </button>
       </div>

@@ -8,7 +8,7 @@ export default function LanguageSelect() {
       value={lang}
       onChange={(e) => setLang(e.target.value as UiLang)}
       aria-label="Language"
-      className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900"
+      className="rounded-2xl border border-slate-200 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900"
     >
       {UI_LANGS.map((l) => (
         <option key={l.code} value={l.code}>
