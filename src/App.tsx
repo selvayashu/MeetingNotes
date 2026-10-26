@@ -8,6 +8,7 @@ import { useI18n } from './i18n/context'
 import { isUiLang } from './i18n/translate'
 import { isSupabaseConfigured, supabase } from './lib/supabase'
 import Admin from './pages/Admin'
+import AdminUsage from './pages/AdminUsage'
 import Dashboard from './pages/Dashboard'
 import Login from './pages/Login'
 import MeetingDetail from './pages/MeetingDetail'
@@ -94,6 +95,7 @@ function Shell() {
         <Route path="/meeting/:id" element={<MeetingDetail />} />
         <Route path="/settings" element={<Settings />} />
         {profile.is_admin && <Route path="/admin" element={<Admin />} />}
+        {profile.is_admin && <Route path="/admin/usage" element={<AdminUsage />} />}
       </Routes>
     </main>
   )

@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { isCronCaller } from '../lib/cron'
 import type { Env, MeetingRow } from '../lib/env'
+import { Meter } from '../lib/meter'
 import { partOffsetMs, toSegmentRows } from '../lib/segments'
 import { runSummaryStage } from '../lib/summaryStage'
 import { transcribe } from '../lib/whisper'
@@ -52,6 +53,19 @@ async function authenticate(request: Request, env: Env): Promise<string> {
   return user.id
 }
 
+/** Today's AI usage against the admin-set daily cap. null = couldn't be read; we then carry on rather than stop all processing. */
+async function capStatus(db: SupabaseClient): Promise<{ used: number; cap: number; reached: boolean } | null> {
+  const { data, error } = await db.rpc('ai_cap_status')
+  if (error || !data?.[0]) {
+    if (error) console.error('ai_cap_status failed', error.message)
+    return null
+  }
+  const r = data[0] as { used: unknown; cap: unknown; reached: unknown }
+  return { used: Number(r.used), cap: Number(r.cap), reached: r.reached === true }
+}
+
+const CAP_MESSAGE = "Today's AI limit has been reached. Processing resumes automatically after 00:00 UTC."
+
 async function checkRateLimit(db: SupabaseClient, userId: string, env: Env) {
   const limit = Number(env.MAX_MEETINGS_PER_DAY) || 10
   const dayStart = new Date()
@@ -73,6 +87,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   let meetingId: string | undefined
   let locked = false
   let cron = false
+  let meter: Meter | undefined
+  let ownerId = ''
 
   try {
     let userId = ''
@@ -86,6 +102,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     db = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
       auth: { persistSession: false },
     })
+    meter = new Meter(env.AI) // counts every AI call made below; stored in `finally`
 
     // The service role bypasses RLS, so enforce admin approval here too (first, before any work).
     const assertApproved = async (uid: string) => {
@@ -102,6 +119,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       userId = meeting.user_id // the scheduler acts for the owner...
       await assertApproved(userId) // ...and only while the owner is still approved
     }
+    ownerId = userId
 
     // Re-writing finished notes is an explicit request by the owner (never the scheduler), with a short cooldown.
     const regenerate = body?.regenerate === true && !cron
@@ -133,6 +151,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     // Rate limit counts a meeting once, when processing first starts.
     if (!meeting.processing_started_at && !regenerate) await checkRateLimit(db, userId, env)
 
+    // Daily AI cap (soft: a few calls already in flight can finish). Nothing is marked failed; it just waits.
+    if ((await capStatus(db))?.reached) throw new HttpError(503, CAP_MESSAGE)
+
     // Atomic claim: only one worker per meeting at a time.
     const now = new Date()
     // Resume at the right stage (a retry after a summarising failure skips transcription).
@@ -162,6 +183,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     const workingParts = parts.map((p) => ({ ...p }))
 
     while (processed < parts.length && (processed === meeting.processed_parts || Date.now() - started < TIME_BUDGET_MS)) {
+      // Between parts: stop (keeping progress) if this meeting itself pushed the day over the cap.
+      if (processed > meeting.processed_parts && (await capStatus(db))?.reached) break
       const part = workingParts[processed]
       const { data: file, error: dlErr } = await db.storage.from('recordings').download(part.path)
       if (dlErr || !file) throw new Error(`Could not read audio part ${processed + 1}`)
@@ -169,7 +192,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
         throw new HttpError(422, `Audio part ${processed + 1} is too large to transcribe (${Math.round(file.size / 1e6)} MB). Upload WAV or a shorter file.`)
       }
 
-      const result = await transcribe(env.AI, await file.arrayBuffer(), meeting.language)
+      const result = await transcribe(meter.ai, await file.arrayBuffer(), meeting.language)
       const offsetMs = partOffsetMs(workingParts, processed)
       part.actual_ms = Math.round(result.durationSeconds * 1000) || undefined
 
@@ -210,6 +233,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     const summary = await runSummaryStage({
       db,
       env,
+      ai: meter.ai,
       meeting: { ...meeting, audio_parts: workingParts },
       deadline: started + TIME_BUDGET_MS,
     })
@@ -242,5 +266,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
         .eq('id', meetingId)
     }
     return json({ error: message }, status)
+  } finally {
+    // Usage is recorded even when processing failed part-way: the AI was still used.
+    if (meter && db) await meter.flush(db, { userId: ownerId, meetingId })
   }
 }

@@ -54,9 +54,10 @@ export default function Admin() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">{t('admin.title')}</h2>
-        <Link to="/" className="text-sm text-indigo-600 underline dark:text-indigo-400">
-          {t('detail.back')}
-        </Link>
+        <div className="flex gap-4 text-sm text-indigo-600 underline dark:text-indigo-400">
+          <Link to="/admin/usage">{t('admin.usageLink')}</Link>
+          <Link to="/">{t('detail.back')}</Link>
+        </div>
       </div>
       {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
       {!users && !error && <p className="text-slate-500 dark:text-slate-400">{t('common.loading')}</p>}

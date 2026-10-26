@@ -93,6 +93,8 @@ export async function runSummaryStage(args: {
   env: Env
   meeting: MeetingRow
   deadline: number
+  /** The AI binding to use (the metered wrapper); defaults to env.AI. */
+  ai?: Ai
 }): Promise<StageProgress> {
   const { db, env, meeting, deadline } = args
   const model = env.LLM_MODEL || DEFAULT_LLM
@@ -111,7 +113,7 @@ export async function runSummaryStage(args: {
     .maybeSingle()
 
   const result = await summariseStep({
-    ai: env.AI,
+    ai: args.ai ?? env.AI,
     model,
     chunks,
     state: (existing?.raw_llm_output as SummaryState | null) ?? null,
