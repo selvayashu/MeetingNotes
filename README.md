@@ -182,6 +182,21 @@ next visit to the Record page (or a hint on the dashboard) offers **Recover it**
 upload path. The safety copy is deleted once the recording is in the upload queue. At most about a second of audio is lost.
 This relies on the browser's storage (private/incognito windows may refuse it; the app then records without a safety copy).
 
+## Live captions (preview)
+
+On the Record page, **Show live captions while recording (preview)** shows rough text as people talk, in a scrolling box under the recorder. It is **off by default** and
+the choice is remembered on that device.
+
+- It uses the browser's own speech recognition (Web Speech API), not our transcription. **In Chrome and Edge the browser sends the audio to its vendor's speech service
+  (Google or Microsoft)**, and the switch says so. For confidential meetings leave it off. Nothing from the captions is stored or sent to MeetNotes' servers.
+- Works in Chrome and Edge (partly Safari); not Firefox. Where it is missing, the Record page says so instead of showing a dead switch.
+- It follows the *Spoken language* choice (English, Hindi, Tamil). *Auto-detect* cannot be used by the browser, so it follows the interface language.
+  Quality is below Whisper's, especially for Hindi and Tamil; the box says it is a rough preview.
+- Captions run only while recording (not while paused), restart themselves after silence, and stop with a short message if permission is refused or the network drops.
+  **Recording itself is never affected.** The real transcript is still made by Whisper after you stop.
+- The consent wording was not changed: captions are a separate, opt-in disclosure.
+- Not built: live captions from chunks sent to our own transcription (same quality as the final transcript, but uses AI units while recording).
+
 ## Audio retention
 
 **Settings → Keep audio recordings**: *Until I delete them* (default), 7, 30 or 90 days. Once a finished meeting is older than that, its recording is deleted
@@ -403,6 +418,11 @@ Automated: `npm test` and `npm run typecheck` must pass. Manual (needs a live Su
       the tab) and gets the app. Revoke them: their next request returns no data and processing is refused with 403.
 - [ ] A pending user calling `/api/process-meeting` with their own token gets 403; PATCHing their own `profiles.status`
       is rejected.
+
+**Live captions**
+- [ ] In Chrome, tick *Show live captions*, start recording and speak: text appears within a second or two; pause stops it, resume restarts it.
+- [ ] Untick it (or open the page in Firefox): no captions, and recording and the final transcript are unaffected.
+- [ ] Deny the microphone/speech permission: a calm message appears and the recording continues.
 
 **Audio retention**
 - [ ] Set *Keep audio recordings* to 7 days: the setting is saved and survives a reload. (Deletion itself is exercised by the scheduler; see the test notes in the commit history.)

@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ConsentNotice from '../components/ConsentNotice'
+import LiveCaptions from '../components/LiveCaptions'
 import TemplateSelect from '../components/TemplateSelect'
+import { useLiveCaptions } from '../hooks/useLiveCaptions'
+import { readCaptionsPref, recognitionLang, saveCaptionsPref } from '../lib/liveCaptions'
 import { readTemplate, saveTemplate, type TemplateId } from '../lib/templates'
 import { useAuth } from '../hooks/useAuth'
 import { useDraftRecovery } from '../hooks/useDraftRecovery'
@@ -34,6 +37,7 @@ export default function Record() {
   const [language, setLanguage] = useState<Lang>(() => readSpokenLanguage(lang))
   const [notesLanguage, setNotesLanguage] = useState<Lang>('en')
   const [template, setTemplate] = useState<TemplateId>(() => readTemplate())
+  const [captionsOn, setCaptionsOn] = useState(() => readCaptionsPref())
   const [file, setFile] = useState<File | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -54,6 +58,12 @@ export default function Record() {
   }, [previewUrl])
 
   const active = rec.state === 'recording' || rec.state === 'paused'
+  const captions = useLiveCaptions({
+    enabled: captionsOn,
+    active: rec.state === 'recording',
+    lang: recognitionLang(language, lang),
+    resetKey: rec.state === 'idle',
+  })
   const hasAudio = Boolean(rec.result || file || recovered)
   const recoveredSeconds = recovered?.parts.reduce((s, p) => s + (p.durationSeconds ?? 0), 0) ?? 0
 
@@ -182,6 +192,19 @@ export default function Record() {
           saveTemplate(id)
         }}
         className={fieldCls}
+      />
+
+      <LiveCaptions
+        supported={captions.supported}
+        enabled={captionsOn}
+        onToggle={(on) => {
+          setCaptionsOn(on)
+          saveCaptionsPref(on)
+        }}
+        recording={active}
+        lines={captions.lines}
+        interim={captions.interim}
+        problem={captions.problem}
       />
 
       {language === 'auto' && <p className="-mt-2 text-xs text-slate-500 dark:text-slate-400">{t('record.langHint')}</p>}

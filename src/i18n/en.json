@@ -402,5 +402,16 @@
   "retention.forever": "Until I delete them",
   "retention.days": "{n} days",
   "retention.help": "After this time the recording is deleted automatically. The transcript, summary and action items stay. Checked once a day.",
-  "retention.overridden": "Not needed while \"Delete audio after notes are generated\" is on, which already deletes the audio sooner."
+  "retention.overridden": "Not needed while \"Delete audio after notes are generated\" is on, which already deletes the audio sooner.",
+
+  "captions.toggle": "Show live captions while recording (preview)",
+  "captions.privacy": "In Chrome and Edge, your browser sends the audio to its speech service (Google or Microsoft) to make these captions. Leave this off for confidential meetings. Nothing from it is saved.",
+  "captions.unsupported": "Live captions are not available in this browser. They work in Chrome and Edge.",
+  "captions.title": "Live captions (preview)",
+  "captions.listening": "Listening…",
+  "captions.note": "A rough preview only. The real transcript is made after you stop, and is usually more accurate.",
+  "captions.denied": "Live captions are blocked (microphone or speech service not allowed). Recording continues normally.",
+  "captions.network": "Live captions need an internet connection and stopped. Recording continues normally.",
+  "captions.language": "This browser cannot caption the chosen language. Recording continues normally.",
+  "captions.unavailable": "Live captions stopped working. Recording continues normally."
 }
