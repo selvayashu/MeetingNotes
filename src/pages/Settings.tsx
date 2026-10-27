@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import DataSection from '../components/DataSection'
+import Diagnostics from '../components/Diagnostics'
 import RetentionSetting, { type Retention } from '../components/RetentionSetting'
 import { useAuth } from '../hooks/useAuth'
 import { useI18n } from '../i18n/context'
@@ -167,6 +168,8 @@ export default function Settings() {
       <ChangePassword />
 
       <DataSection />
+
+      <Diagnostics />
 
       <div className="flex items-center justify-between gap-3 card p-4">
         <p className="min-w-0 truncate text-sm text-slate-500 dark:text-slate-400">

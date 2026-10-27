@@ -19,6 +19,8 @@ body {
   background: #f6f5ff;
   color: #1e1b4b;
   -webkit-text-size-adjust: 100%;
+  /* Long words (Tamil compounds, e-mail addresses) wrap instead of pushing the page wider than a small phone. */
+  overflow-wrap: anywhere;
 }
 html.dark body {
   background: #0f0d2a;

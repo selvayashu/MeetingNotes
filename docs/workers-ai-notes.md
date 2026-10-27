@@ -23,8 +23,8 @@ base64 work rather than Whisper, but it sets a practical ceiling, so MeetNotes k
 Whisper call small (parts of about 5 minutes and at most 12 MB; the server rejects parts over 16 MB).
 
 ## Not tested
-- webm/opus, mp4/m4a and mp3 input (no ffmpeg or encoder available here). Browser recordings use
-  webm (Chrome/Firefox/Android) or mp4 (iOS Safari); the first real recording is the test.
+- mp3 input. **Tested later (2026-10-28):** real browser recordings in webm/opus, mp4/opus and mp4/AAC all decode and transcribe correctly
+  (see docs/device-testing.md). iOS Safari's own mp4 file has not been tried.
 - Hindi and Tamil accuracy (no sample audio). Use the language hint for non-English meetings.
 
 ## Why audio is stored in parts

@@ -182,6 +182,12 @@ next visit to the Record page (or a hint on the dashboard) offers **Recover it**
 upload path. The safety copy is deleted once the recording is in the upload queue. At most about a second of audio is lost.
 This relies on the browser's storage (private/incognito windows may refuse it; the app then records without a safety copy).
 
+## Testing on real devices
+
+`docs/device-testing.md` has the device list, a five-minute check and the likely problems. **Settings, Diagnostics** shows what a phone supports (recording format, wake lock, storage,
+offline support, app version), has a **3-second recording test** that records and plays back using the same format as the Record page, and a **Copy diagnostics** button for bug reports.
+Automated so far: every page fits a 320 px screen in English, Hindi and Tamil, and real WebM/MP4(AAC) browser recordings transcribe correctly. Not yet done: a real iPhone or Android.
+
 ## Hindi spelling clean-up
 
 Whisper's Hindi has many spelling mistakes, so Hindi transcripts are automatically corrected by a small language model (Llama 3.1 8B) right after transcription:

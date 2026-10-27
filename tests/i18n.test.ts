@@ -61,3 +61,22 @@ describe('detectLang / theme', () => {
     expect(isDark('system', false)).toBe(false)
   })
 })
+
+// Words that must be used the same way on every screen. Add a pattern here when a reviewer settles a term.
+describe('term consistency', () => {
+  const FORBIDDEN: Record<'hi' | 'ta', { why: string; re: RegExp }[]> = {
+    hi: [
+      // "summary" is सारांश everywhere; सार ("essence") alone was used on some screens and सारांश on others.
+      { why: 'use सारांश, not सार, for "summary"', re: /(^|[\s("])सार(?=[\s।,.:)"]|$)/u },
+    ],
+    ta: [],
+  }
+  for (const lang of ['hi', 'ta'] as const) {
+    it(`${lang}: no inconsistent variants of agreed terms`, () => {
+      const bad = Object.entries(dictionaries[lang]).flatMap(([k, v]) =>
+        FORBIDDEN[lang].filter((f) => f.re.test(v)).map((f) => `${k}: ${f.why}`),
+      )
+      expect(bad).toEqual([])
+    })
+  }
+})

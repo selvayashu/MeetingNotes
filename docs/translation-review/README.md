@@ -17,9 +17,10 @@ You need: Excel, Google Sheets or LibreOffice, and the file for your language: `
    - Is the same term used for the same thing everywhere?
    - Is the tone right? Warnings, such as the recording-consent notice and "delete my account", must be clear and serious.
    - Can a button label be understood in two or three words?
-4. Keep `{placeholders}` such as `{n}` or `{email}` exactly as they are. They are filled in by the app (names, numbers, dates). You can move them to wherever your grammar needs them.
-5. The **Sample meeting** rows are example content (a made-up meeting about a website launch). Make them sound like a real meeting in your language.
-6. Save as **CSV UTF-8** (in Excel: *Save As, CSV UTF-8*; do not use plain "CSV", which breaks Hindi and Tamil letters) and send it back.
+4. Also answer the questions in `questions.md` (a few minutes).
+5. Keep `{placeholders}` such as `{n}` or `{email}` exactly as they are. They are filled in by the app (names, numbers, dates). You can move them to wherever your grammar needs them.
+6. The **Sample meeting** rows are example content (a made-up meeting about a website launch). Make them sound like a real meeting in your language.
+7. Save as **CSV UTF-8** (in Excel: *Save As, CSV UTF-8*; do not use plain "CSV", which breaks Hindi and Tamil letters) and send it back.
 
 ## For the developer
 

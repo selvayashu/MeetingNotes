@@ -423,5 +423,13 @@
   "dashboard.statHours": "Recorded, 7 days",
   "dashboard.statOverdue": "Overdue actions",
 
-  "transcript.autoFixed": "The spelling of this Hindi transcript was improved automatically. Check names and numbers."
+  "transcript.autoFixed": "The spelling of this Hindi transcript was improved automatically. Check names and numbers.",
+
+  "diag.title": "Diagnostics (for bug reports)",
+  "diag.help": "Checks what this phone or browser can do. Nothing is sent anywhere; use Copy and paste the result when you report a problem.",
+  "diag.test": "Test recording (3 seconds)",
+  "diag.testing": "Recording…",
+  "diag.copy": "Copy diagnostics",
+  "diag.copied": "Copied.",
+  "diag.copyFailed": "Could not copy. Select the text and copy it by hand."
 }

@@ -4,6 +4,11 @@ import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  define: {
+    // Shown under Settings > Diagnostics so a bug report says which build it came from (Cloudflare Pages sets the commit).
+    __COMMIT__: JSON.stringify((process.env.CF_PAGES_COMMIT_SHA ?? 'dev').slice(0, 7)),
+    __BUILT__: JSON.stringify(new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC'),
+  },
   plugins: [
     react(),
     tailwindcss(),

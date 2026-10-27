@@ -116,7 +116,7 @@ export default function DataSection() {
         <p className="text-sm text-slate-600 dark:text-slate-300">{t('data.deleteKept')}</p>
         <p className="text-sm font-medium">{t('data.deleteNoUndo')}</p>
         <label className="flex flex-col gap-1 text-sm">
-          <span>{t('data.deleteType', { email })}</span>
+          <span className="[overflow-wrap:anywhere]">{t('data.deleteType', { email })}</span>
           <input
             type="email"
             autoComplete="off"

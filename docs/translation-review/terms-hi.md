@@ -4,7 +4,7 @@ Please confirm or correct these first; they appear on many screens.
 
 | English | Hindi (current) |
 |---|---|
-| Summary | सार |
+| Summary | सारांश |
 | Decisions | निर्णय |
 | Action items | कार्य |
 | Transcript | ट्रांसक्रिप्ट |
