@@ -11,7 +11,8 @@
     "test": "vitest run",
     "typecheck": "tsc -p functions/tsconfig.json",
     "i18n:export": "node scripts/i18n-review.mjs export",
-    "i18n:apply": "node scripts/i18n-review.mjs apply"
+    "i18n:apply": "node scripts/i18n-review.mjs apply",
+    "live": "node scripts/live-checks/run.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",

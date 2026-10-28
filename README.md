@@ -182,6 +182,12 @@ next visit to the Record page (or a hint on the dashboard) offers **Recover it**
 upload path. The safety copy is deleted once the recording is in the upload queue. At most about a second of audio is lost.
 This relies on the browser's storage (private/incognito windows may refuse it; the app then records without a safety copy).
 
+## Deploying and live checks
+
+Two project skills for Claude Code (`.claude/skills/`) describe the routine: **`deploy-meetnotes`** (checks, migrations first, secrets scan, push to `main`, wait for Cloudflare Pages, verify) and
+**`live-checks-meetnotes`** (the end-to-end scripts in `scripts/live-checks/`). Run the checks with `npm run live` (about 12 minutes; `-- <name>` for one, `-- all` to include the slow background check).
+They run against production with throw-away test users that are deleted afterwards, and use a few hundred AI units.
+
 ## Testing on real devices
 
 `docs/device-testing.md` has the device list, a five-minute check and the likely problems. **Settings, Diagnostics** shows what a phone supports (recording format, wake lock, storage,
